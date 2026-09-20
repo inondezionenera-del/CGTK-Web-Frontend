@@ -1,0 +1,19 @@
+@import 'tailwindcss';
+
+/* Mode terang dan gelap dua-duanya wajib jalan. Tailwind memakai prefers-color-scheme
+   lewat varian dark:, jadi cukup tulis kelasnya, tidak perlu setelan tambahan. */
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Semua tombol minimal 44px tingginya, aturan dari lembar tugas.
+   Peserta memakai HP sambil berdiri di keramaian. */
+button {
+  min-height: 2.75rem;
+}

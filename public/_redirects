@@ -1,0 +1,4 @@
+# Cloudflare Pages: semua alamat dilempar ke index.html biar router React yang urus.
+# Tanpa baris ini, peserta yang membuka /campuses langsung dari tautan akan
+# dapat 404, padahal di komputermu sendiri kelihatan baik-baik saja.
+/*    /index.html   200
