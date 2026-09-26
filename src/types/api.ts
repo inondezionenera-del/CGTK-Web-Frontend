@@ -75,6 +75,8 @@ export interface Sesi {
   saya_sudah_hadir?: boolean;
 }
 
+export type JenisKampus = 'NEGERI' | 'SWASTA' | 'KEDINASAN';
+
 export interface Kampus {
   id: number;
   nama: string;
@@ -84,5 +86,24 @@ export interface Kampus {
   akreditasi: string | null;
   website: string | null;
   warna_khas: string | null;
+  /** Boleh null: Divisi Acara belum tentu mengisinya. Yang null tetap tampil
+   *  di tombol "Semua", cuma tidak muncul waktu disaring. */
+  jenis: JenisKampus | null;
   jumlah_alumni: number;
+}
+
+/**
+ * Saringan halaman direktori kampus.
+ *
+ *   api.get<Kampus[]>('/universities?jenis=NEGERI')
+ *   api.get<Kampus[]>('/universities?rumpun=Kesehatan')
+ *   api.get<Kampus[]>('/universities?cari=tekno&jenis=SWASTA')
+ *
+ * `rumpun` isinya nama rumpun dari `GET /majors/rumpun`, bukan dikarang di
+ * program. Hasilnya kampus yang punya minimal satu jurusan di rumpun itu.
+ */
+export interface SaringanKampus {
+  cari?: string;
+  jenis?: JenisKampus;
+  rumpun?: string;
 }

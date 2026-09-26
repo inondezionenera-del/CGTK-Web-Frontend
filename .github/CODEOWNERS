@@ -1,0 +1,34 @@
+# Siapa yang WAJIB mereview apa.
+#
+# Proteksi branch minta 1 persetujuan, dan GitHub menerima persetujuan dari siapa
+# pun yang punya akses tulis. Tanpa berkas ini, Fariz bisa menyetujui PR Haqi
+# dan sebaliknya, dan perkakas bersama di src/lib/ bisa berubah tanpa pernah
+# dilihat orang yang memegang backend-nya.
+#
+# Bukan soal tidak percaya. Soalnya src/lib/api.ts dipakai ketiganya: satu
+# perubahan di situ bisa mematahkan halaman dua orang lain yang sedang tidak
+# membuka laptop.
+
+# Bawaan: semua butuh Rafly, sesuai aturan di README ("yang review: aku").
+*                       @inondezionenera-del
+
+# Perkakas bersama. Ini yang paling mahal kalau berubah tanpa diperiksa:
+#   api.ts       satu-satunya pintu ke backend
+#   supabase.ts  login
+#   sesi.tsx     siapa yang sedang masuk
+#   kait.ts      useMuat dan useMuatUlangBerkala
+#   types/       bentuk data dari API Contract
+#   App.tsx      peta seluruh alamat halaman
+/src/lib/               @inondezionenera-del
+/src/types/             @inondezionenera-del
+/src/komponen/          @inondezionenera-del
+/src/App.tsx            @inondezionenera-del
+/src/main.tsx           @inondezionenera-del
+
+# Setelan dan bangunan.
+/package.json           @inondezionenera-del
+/vite.config.ts         @inondezionenera-del
+/tsconfig.json          @inondezionenera-del
+/.env.example           @inondezionenera-del
+/public/_redirects      @inondezionenera-del
+/.github/               @inondezionenera-del
