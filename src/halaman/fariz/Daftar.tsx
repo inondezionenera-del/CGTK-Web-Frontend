@@ -98,13 +98,19 @@ export default function Daftar() {
     'isian outline-none focus:ring-2 focus:ring-merek-magenta/40 ' +
     'focus:border-utama-600 dark:border-slate-700 dark:bg-slate-800';
 
+  // Mengikuti mockup Registration: latar air sampai ke tepi layar, lalu satu
+  // kartu putih membulat yang mengambang di atasnya dan judul tebal di tengah.
   return (
-    <form onSubmit={kirim} className="mx-auto max-w-xl space-y-5 pb-10">
-      <header>
+    <div className="latar-air min-h-[calc(100dvh-3.5rem)] px-4 py-8">
+      <form
+        onSubmit={kirim}
+        className="kartu mx-auto max-w-xl space-y-5 px-6 pb-10 pt-8"
+      >
+      <header className="text-center">
         <p className="text-xs font-bold uppercase tracking-wider text-utama-600">
           Langkah 1 dari 2
         </p>
-        <h1 className="mt-1 text-2xl font-bold">Data Peserta</h1>
+        <h1 className="judul-tebal mt-1 text-[2.4rem]">Daftar</h1>
         <p className="mt-1 text-sm text-slate-500">
           Isi sekali, dipakai sampai hari acara.
         </p>
@@ -205,10 +211,11 @@ export default function Daftar() {
       <button
         type="submit"
         disabled={mengirim}
-        className="w-full rounded-2xl bg-utama-600 px-6 font-bold text-white shadow-sm transition hover:bg-utama-700 disabled:opacity-60"
+        className="tombol-utama w-full px-6 py-3.5 disabled:opacity-60"
       >
         {mengirim ? 'Menyimpan...' : 'Simpan & Lanjut ke Pembayaran'}
       </button>
-    </form>
+      </form>
+    </div>
   );
 }

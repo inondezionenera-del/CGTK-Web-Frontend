@@ -82,43 +82,46 @@ export default function Bayar() {
   }
 
   return (
-    <div className="mx-auto max-w-md space-y-5 pb-10">
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <h1 className="text-lg font-bold">Pembayaran</h1>
+    <div className="latar-air min-h-[calc(100dvh-3.5rem)] px-4 py-8">
+      <div className="kartu mx-auto max-w-md px-6 pb-10 pt-8 text-center">
+        <h1 className="judul-tebal text-2xl">Bayar Disini</h1>
 
-        {/* Kode registrasi: elemen paling besar di layar ini, dengan sengaja. */}
-        <div className="mt-5 rounded-2xl border-2 border-dashed border-utama-600 bg-utama-50 p-5 dark:bg-utama-900/20">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-utama-700 dark:text-utama-100">
-            Kode Registrasi Kamu
+        {/* Harga ditulis paling besar sesudah judul, seperti di mockup.
+            Nilainya dari pengaturan server, bukan ditulis di program, supaya
+            Administrasi bisa mengubahnya sendiri. */}
+        {data.harga_tampil && (
+          <p className="judul-tebal mt-2 text-[2.6rem] leading-none text-slate-900">
+            {data.harga_tampil}
           </p>
-          <p className="mt-1 break-all text-3xl font-black tracking-wider text-utama-900 dark:text-white">
+        )}
+
+        {/* Kode registrasi. Ini yang paling sering lupa ditulis peserta di form
+            pembayaran, dan tanpa kode itu uang yang masuk tidak bisa
+            dicocokkan dengan namanya. Karena itu tombol salin ditaruh menempel
+            di sebelahnya, bukan di bawah. */}
+        <p className="mt-7 text-left text-sm font-extrabold">Kode Pendaftaran</p>
+        <div className="mt-2 flex items-stretch gap-2">
+          <p className="flex min-h-14 flex-1 items-center justify-center rounded-full bg-slate-200 px-4 text-xl font-black tracking-wider text-slate-900 break-all">
             {data.kode_registrasi}
           </p>
           <button
             type="button"
             onClick={() => void salin()}
-            className="mt-3 rounded-xl border border-utama-600 bg-white px-5 text-sm font-bold text-utama-700 dark:bg-slate-800 dark:text-utama-100"
+            aria-label="Salin kode pendaftaran"
+            className="flex min-h-14 w-16 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-extrabold text-slate-700"
           >
-            {tersalin ? 'Tersalin' : 'Salin Kode'}
+            {tersalin ? 'OK' : 'Salin'}
           </button>
-          <p className="mt-3 text-xs font-bold leading-tight text-bahaya-600">
-            WAJIB kamu tulis di form pembayaran. Kalau tidak, pembayaranmu tidak
-            bisa dicocokkan dengan namamu.
-          </p>
         </div>
 
-        {data.harga_tampil && (
-          <p className="mt-5 text-sm text-slate-500">
-            Biaya pendaftaran{' '}
-            <span className="font-bold text-slate-900 dark:text-slate-100">
-              {data.harga_tampil}
-            </span>
-          </p>
-        )}
+        <p className="mt-2 text-left text-xs font-bold leading-tight text-bahaya-600">
+          WAJIB kamu tulis di form pembayaran. Kalau tidak, pembayaranmu tidak
+          bisa dicocokkan dengan namamu.
+        </p>
 
         {/* Petunjuk ditulis Divisi Administrasi, panjangnya tidak bisa ditebak. */}
         {data.petunjuk && (
-          <div className="mt-4 whitespace-pre-wrap rounded-2xl bg-slate-50 p-4 text-left text-sm leading-relaxed text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+          <div className="mt-5 whitespace-pre-wrap rounded-2xl bg-slate-100 p-4 text-left text-sm leading-relaxed text-slate-700">
             {data.petunjuk}
           </div>
         )}
@@ -126,11 +129,11 @@ export default function Bayar() {
         {/* Keadaan 3: Administrasi belum mengisi alamat formnya. Tombolnya tetap
             tampil supaya peserta tahu langkah ini ada, tapi mati. */}
         {!data.form_tersedia || !data.link_bayar ? (
-          <div className="mt-5">
+          <div className="mt-6">
             <button
               type="button"
               disabled
-              className="w-full cursor-not-allowed rounded-2xl bg-slate-200 px-6 font-bold text-slate-500 dark:bg-slate-800"
+              className="w-full cursor-not-allowed rounded-full bg-slate-200 px-6 py-3.5 font-bold text-slate-500"
             >
               Form Pembayaran Belum Dibuka
             </button>
@@ -145,33 +148,36 @@ export default function Bayar() {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setSudahBuka(true)}
-            className="mt-5 flex items-center justify-center rounded-2xl bg-utama-600 px-6 py-3.5 font-bold text-white shadow-sm transition hover:bg-utama-700"
+            className="tombol-utama mt-6 flex items-center justify-center px-6 py-3.5"
           >
             Buka Form Pembayaran
           </a>
         )}
 
         {data.batas_akhir && (
-          <p className="mt-3 text-xs text-slate-500">
-            Batas akhir pembayaran {data.batas_akhir}
+          <p className="mt-4 text-sm font-extrabold leading-tight text-bahaya-600">
+            *Batas Akhir Pembayaran
+            <br />
+            {data.batas_akhir}
           </p>
         )}
-      </div>
 
-      {/* Keadaan 4 */}
-      {sudahBuka && (
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
-          <p className="text-sm font-bold">Sudah selesai membayar?</p>
-          <p className="mt-1 text-xs leading-relaxed text-slate-500">
-            Panitia memeriksa dan menandainya dalam 1x24 jam. Kamu bisa menutup
-            halaman ini dan mengeceknya lagi nanti, atau lewat halaman{' '}
-            <Link to="/cek-status" className="font-semibold underline">
-              Cek Status
-            </Link>
-            .
-          </p>
-        </div>
-      )}
+        {/* Keadaan 4 */}
+        {sudahBuka && (
+          <div className="mt-6 rounded-2xl bg-slate-100 p-4 text-left">
+            <p className="text-sm font-bold">Sudah selesai membayar?</p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-500">
+              Panitia memeriksa dan menandainya dalam 1x24 jam. Kamu bisa
+              menutup halaman ini dan mengeceknya lagi nanti, atau lewat
+              halaman{' '}
+              <Link to="/cek-status" className="font-semibold underline">
+                Cek Status
+              </Link>
+              .
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
