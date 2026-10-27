@@ -100,7 +100,7 @@ export default function Paspor() {
           value={cari}
           onChange={(e) => setCari(e.target.value)}
           placeholder="Cari booth..."
-          className="w-full rounded-xl border border-slate-300 bg-white px-4 outline-none focus:border-utama-600 dark:border-slate-700 dark:bg-slate-800"
+          className="isian outline-none focus:ring-2 focus:ring-merek-magenta/40"
         />
       )}
 

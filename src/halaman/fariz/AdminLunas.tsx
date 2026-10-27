@@ -237,7 +237,7 @@ function Satuan() {
           value={kode}
           onChange={(e) => setKode(e.target.value)}
           placeholder="CGTK-XXXXXX"
-          className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3.5 font-mono uppercase outline-none focus:border-utama-600 dark:border-slate-700 dark:bg-slate-800"
+          className="isian outline-none focus:ring-2 focus:ring-merek-magenta/40 font-mono uppercase"
         />
       </div>
 
@@ -250,7 +250,7 @@ function Satuan() {
           value={catatan}
           onChange={(e) => setCatatan(e.target.value)}
           placeholder="Contoh: tunai 12 Des, diterima Rina"
-          className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3.5 outline-none focus:border-utama-600 dark:border-slate-700 dark:bg-slate-800"
+          className="isian outline-none focus:ring-2 focus:ring-merek-magenta/40"
         />
       </div>
 

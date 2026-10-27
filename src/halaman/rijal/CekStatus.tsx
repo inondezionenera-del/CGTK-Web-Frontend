@@ -91,7 +91,7 @@ export default function CekStatus() {
           placeholder="CGTK-XXXXXX"
           autoComplete="off"
           spellCheck={false}
-          className="w-full rounded-xl border border-slate-300 bg-white px-4 text-center font-mono text-lg uppercase tracking-widest outline-none focus:border-utama-600 dark:border-slate-700 dark:bg-slate-800"
+          className="isian outline-none focus:ring-2 focus:ring-merek-magenta/40 text-center font-mono text-lg uppercase tracking-widest"
         />
         <button
           type="submit"

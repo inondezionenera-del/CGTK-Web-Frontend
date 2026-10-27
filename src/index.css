@@ -1,5 +1,20 @@
 @import 'tailwindcss';
 
+/* -----------------------------------------------------------------------------
+   Mematikan seluruh kelas dark: dalam satu baris.
+
+   Mockup di Figma cuma punya versi terang, dan latar airnya tidak punya
+   padanan gelap. Tanpa ini, HP yang setelannya mode gelap akan menampilkan
+   halaman yang tidak mirip mockup sama sekali, dan itu yang paling sering
+   dikira "webnya tidak sesuai desain".
+
+   Varian dark: sekarang hanya menyala kalau ada [data-theme="dark"] di atasnya,
+   dan tidak ada satu pun tempat yang memasangnya. Kelas dark: di berkas lain
+   dibiarkan: tidak berpengaruh, dan kalau nanti mode gelap jadi dibuat, cukup
+   hapus baris ini.
+----------------------------------------------------------------------------- */
+@custom-variant dark (&:where([data-theme='dark'] *));
+
 /* =============================================================================
    Token warna.
 
@@ -55,7 +70,10 @@ html {
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Archivo. Judul di mockup memakai huruf tebal bergaya grotesk dengan 'a'
+     dua tingkat; system-ui tidak pernah terlihat seperti itu di HP mana pun,
+     dan itu salah satu alasan hasilnya terasa beda dari gambar. */
+  font-family: Archivo, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   /* 16px minimum. Di bawah itu browser HP memperbesar sendiri waktu sebuah
      input difokus, dan tata letaknya ikut bergeser. */
   font-size: 16px;
@@ -74,21 +92,52 @@ textarea {
   font-size: 16px;
 }
 
+input::placeholder,
+textarea::placeholder {
+  color: #9aa2ab;
+}
+
 /* -----------------------------------------------------------------------------
-   Bentuk dari mockup: kartu putih sangat membulat dengan bayangan lembut,
-   tombol utama bergradasi, tombol kedua oranye.
+   Bentuk dari mockup.
+
+   Tiga hal yang paling menentukan mirip atau tidaknya, dan ketiganya dipakai
+   berulang di hampir semua layar:
+
+     1. kartu putih dengan sudut sangat membulat (2rem) dan bayangan lebar
+        yang lembut, mengambang di atas latar air
+     2. isian abu-abu tanpa garis tepi, bukan kotak putih bergaris
+     3. tombol utama bergradasi magenta ke pink berbentuk pil
 ----------------------------------------------------------------------------- */
 @utility kartu {
-  border-radius: 1.75rem;
+  border-radius: 2rem;
   background: white;
-  box-shadow: 0 8px 24px -12px rgb(27 58 92 / 0.25);
+  box-shadow: 0 18px 40px -20px rgb(15 42 70 / 0.45);
+}
 
-  /* Mode gelap ditangani di dalam utility-nya, bukan lewat @media terpisah:
-     @utility tidak boleh bersarang di dalam at-rule lain. */
-  @media (prefers-color-scheme: dark) {
-    background: var(--color-slate-900);
-    box-shadow: none;
-  }
+/* Latar air, dipotong dari mockup Dashboard. background-attachment sengaja
+   tidak fixed: di Safari iOS latar yang fixed ikut melompat saat halaman
+   digulir, dan itu lebih mengganggu daripada tekstur yang ikut bergerak. */
+@utility latar-air {
+  background-image: url('/latar-air.jpg');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: repeat-y;
+}
+
+@utility judul-tebal {
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+@utility isian {
+  width: 100%;
+  border: 0;
+  border-radius: 0.875rem;
+  background-color: #f1f3f5;
+  padding: 0.75rem 1rem;
+  font-size: 16px;
+  color: var(--color-slate-900);
 }
 
 @utility tombol-utama {
@@ -98,15 +147,17 @@ textarea {
     var(--color-merek-pink)
   );
   color: white;
-  font-weight: 700;
-  border-radius: 1rem;
+  font-weight: 800;
+  border-radius: 999px;
+  box-shadow: 0 10px 22px -12px rgb(160 38 110 / 0.9);
 }
 
 @utility tombol-kedua {
-  background-color: var(--color-merek-oranye);
+  background-image: linear-gradient(90deg, #f0802f, var(--color-merek-oranye));
   color: white;
-  font-weight: 700;
-  border-radius: 1rem;
+  font-weight: 800;
+  border-radius: 999px;
+  box-shadow: 0 10px 22px -12px rgb(242 116 58 / 0.9);
 }
 
 /* Hormati pengguna yang mematikan animasi di setelan HP-nya. */

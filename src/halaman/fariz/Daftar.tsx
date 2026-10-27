@@ -95,7 +95,7 @@ export default function Daftar() {
   }
 
   const KELAS_INPUT =
-    'w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 outline-none ' +
+    'isian outline-none focus:ring-2 focus:ring-merek-magenta/40 ' +
     'focus:border-utama-600 dark:border-slate-700 dark:bg-slate-800';
 
   return (

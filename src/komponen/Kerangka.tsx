@@ -1,22 +1,22 @@
 /* =============================================================================
    Bingkai luar aplikasi.
 
-   Ini jawaban atas pertanyaan "kenapa berantakan di HP". Prototipe pertama
-   memasang satu baris tab berisi Beranda, Dashboard, Scanner, Bayar, Admin.
-   Tujuh tombol tidak muat di layar 360px, jadi barisnya berubah jadi strip
-   yang digeser, dan itu yang terlihat berantakan.
+   Disusun ulang mengikuti mockup Figma. Yang berubah paling kelihatan: menunya
+   pindah dari bawah ke atas. Di semua gambar mockup, tiap layar punya satu bar
+   putih di paling atas berisi foto profil bulat, ikon obor, lalu tiga tautan.
+   Versi sebelumnya memakai menu melayang di bawah layar, dan itu alasan
+   terbesar kenapa hasilnya terasa bukan desain yang sama walaupun warnanya
+   sudah benar.
 
-   Tapi memperkecilnya bukan jawabannya. Di aplikasi yang sebenarnya tab itu
-   memang tidak ada: sesudah login, server mengirim `arahkan_ke`, dan tiap
-   orang cuma melihat halaman yang jadi haknya. Peserta tidak pernah melihat
-   Scanner atau Admin.
+   Satu hal yang SENGAJA tidak sama persis. Di mockup ketiga tautannya selalu
+   Beranda, Dashboard, Scanner, untuk semua orang. Scanner cuma boleh dibuka
+   panitia; kalau peserta menekannya dia dapat halaman yang menolaknya. Jadi
+   bentuknya dipertahankan, tiga tautan di tempat yang sama, tapi isinya
+   mengikuti peran. Peserta melihat Paspor di slot ketiga.
 
-   Jadi:
-     - peserta  -> menu bawah, maksimal empat
-     - panitia  -> tidak ada menu sama sekali di halaman scanner; layarnya
-                   dipakai satu tangan di tengah antrean dan setiap piksel
-                   yang bukan kamera itu beban
-     - admin    -> dibuka di laptop, tidak dipaksa rapi di HP
+   Halaman scanner tetap mengambil seluruh layar tanpa bar apa pun. Layar itu
+   dipakai satu tangan di tengah antrean, dan setiap piksel yang bukan kamera
+   adalah beban.
 ============================================================================= */
 
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
@@ -29,80 +29,92 @@ interface Menu {
 }
 
 const MENU_PESERTA: Menu[] = [
-  { ke: '/dashboard', label: 'Beranda' },
+  { ke: '/', label: 'Beranda' },
+  { ke: '/dashboard', label: 'Dashboard' },
+  { ke: '/passport', label: 'Paspor' },
+];
+
+const MENU_PANITIA: Menu[] = [
+  { ke: '/', label: 'Beranda' },
+  { ke: '/dashboard', label: 'Dashboard' },
+  { ke: '/scan', label: 'Scanner' },
+];
+
+const MENU_TAMU: Menu[] = [
+  { ke: '/', label: 'Beranda' },
   { ke: '/schedule', label: 'Jadwal' },
   { ke: '/campuses', label: 'Kampus' },
-  { ke: '/passport', label: 'Paspor' },
 ];
 
 export function Kerangka() {
   const { pengguna, masuk } = useSesi();
   const { pathname } = useLocation();
 
-  // Scanner mengambil seluruh layar sendiri. Tidak ada header, tidak ada menu.
-  const layarPenuh = pathname.startsWith('/scan');
-  if (layarPenuh) return <Outlet />;
+  if (pathname.startsWith('/scan')) return <Outlet />;
+
+  // Tiga halaman ini di mockup memakai latar penuh sampai ke tepi layar:
+  // Landing dengan foto hero, Login dan Daftar dengan latar air. Sisanya
+  // tetap memakai lebar dan jarak tepi yang sama seperti sebelumnya, supaya
+  // tidak ada halaman lain yang ikut berubah tata letaknya.
+  const penuh = ['/', '/masuk', '/daftar'].includes(pathname);
 
   const peserta = pengguna?.peran === 'PESERTA';
+  const menu = !masuk ? MENU_TAMU : peserta ? MENU_PESERTA : MENU_PANITIA;
 
   return (
-    <div className="min-h-dvh bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-900/90">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <Link to={masuk ? '/dashboard' : '/'} className="flex items-center gap-2">
-            <span className="rounded-lg bg-linear-to-r from-merek-magenta to-merek-pink px-2 py-1 text-sm font-black text-white">
-              CGTK
-            </span>
-            <span className="text-xs font-semibold text-slate-500">2027</span>
+    <div className="min-h-dvh bg-white text-slate-900">
+      <header className="sticky top-0 z-30 bg-white">
+        <div className="mx-auto flex h-14 max-w-5xl items-center gap-3 px-4">
+          {/* Foto profil. Tanpa foto tetap lingkaran abu-abu, persis seperti
+              di mockup, bukan ruang kosong yang membuat bar-nya terlihat
+              timpang. */}
+          <Link
+            to={masuk ? '/dashboard' : '/masuk'}
+            aria-label={masuk ? 'Profil' : 'Masuk'}
+            className="shrink-0"
+          >
+            <span className="block h-9 w-9 rounded-full bg-slate-200" />
           </Link>
 
-          {masuk ? (
-            <button
-              type="button"
-              onClick={() => void keluar()}
-              className="text-xs font-semibold text-slate-500 underline"
-            >
-              Keluar
-            </button>
-          ) : (
-            <Link
-              to="/masuk"
-              className="tombol-utama px-4 py-2 text-xs"
-            >
-              Masuk
-            </Link>
-          )}
+          <img
+            src="/obor.png"
+            alt=""
+            aria-hidden
+            className="h-6 w-auto shrink-0"
+          />
+
+          <nav className="ml-auto flex items-center gap-5 sm:gap-10">
+            {menu.map((m) => (
+              <NavLink
+                key={m.ke}
+                to={m.ke}
+                end={m.ke === '/'}
+                className={({ isActive }) =>
+                  `text-[13px] font-bold sm:text-sm ${
+                    isActive ? 'text-merek-magenta' : 'text-slate-900'
+                  }`
+                }
+              >
+                {m.label}
+              </NavLink>
+            ))}
+
+            {masuk && (
+              <button
+                type="button"
+                onClick={() => void keluar()}
+                className="text-[13px] font-semibold text-slate-400 sm:text-sm"
+              >
+                Keluar
+              </button>
+            )}
+          </nav>
         </div>
       </header>
 
-      {/* pb-24 menyisakan ruang untuk menu bawah supaya isi halaman tidak
-          tertutup di layar pendek. */}
-      <main className={`mx-auto max-w-5xl px-4 py-5 ${peserta ? 'pb-24' : 'pb-8'}`}>
+      <main className={penuh ? '' : 'mx-auto max-w-5xl px-4 py-5'}>
         <Outlet />
       </main>
-
-      {peserta && (
-        <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] dark:border-slate-800 dark:bg-slate-900">
-          <ul className="mx-auto flex max-w-lg">
-            {MENU_PESERTA.map((m) => (
-              <li key={m.ke} className="flex-1">
-                <NavLink
-                  to={m.ke}
-                  className={({ isActive }) =>
-                    `flex min-h-14 flex-col items-center justify-center text-xs font-bold ${
-                      isActive
-                        ? 'text-utama-600 dark:text-utama-100'
-                        : 'text-slate-400'
-                    }`
-                  }
-                >
-                  {m.label}
-                </NavLink>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      )}
     </div>
   );
 }

@@ -23,9 +23,11 @@ interface Props {
   error?: string;
 }
 
+// Isian abu-abu tanpa garis tepi, seperti di mockup. Garis fokusnya memakai
+// ring, bukan border, supaya tingginya tidak bergeser satu piksel waktu
+// difokus dan barisnya tidak ikut melompat.
 const KELAS_INPUT =
-  'w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-slate-900 outline-none ' +
-  'focus:border-utama-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100';
+  'isian outline-none focus:ring-2 focus:ring-merek-magenta/40';
 
 export function BidangDinamis({ bidang, nilai, onUbah, error }: Props) {
   const id = `f-${bidang.kunci}`;

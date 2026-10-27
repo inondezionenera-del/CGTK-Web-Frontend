@@ -62,7 +62,7 @@ export default function Kampus() {
         value={cari}
         onChange={(e) => setCari(e.target.value)}
         placeholder="Cari kampus..."
-        className="w-full rounded-xl border border-slate-300 bg-white px-4 outline-none focus:border-utama-600 dark:border-slate-700 dark:bg-slate-800"
+        className="isian outline-none focus:ring-2 focus:ring-merek-magenta/40"
       />
 
       <div className="flex gap-2 overflow-x-auto pb-1">

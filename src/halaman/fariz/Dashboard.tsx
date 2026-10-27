@@ -24,10 +24,25 @@ import { Memuat, PesanError } from '../../komponen/Keadaan';
 import { useSesi } from '../../lib/sesi';
 import type { Pendaftaran, QrSaya, Sesi } from '../../types/api';
 
+interface Level {
+  nomor: number;
+  nama: string;
+  xp_minimum: number;
+}
+
+interface AkuSaya {
+  peserta: {
+    total_xp: number;
+    level: Level | null;
+    level_berikutnya: Level | null;
+  } | null;
+}
+
 interface Ringkas {
   pendaftaran: Pendaftaran | null;
   qr: QrSaya | null;
   live: Sesi[];
+  aku: AkuSaya | null;
 }
 
 export default function Dashboard() {
@@ -49,7 +64,10 @@ export default function Dashboard() {
       .get<Sesi[]>('/events/sessions/live', { signal })
       .catch(() => [] as Sesi[]);
 
-    return { pendaftaran, qr, live };
+    // XP dan level untuk bar di bawah nama, seperti di mockup.
+    const aku = await api.get<AkuSaya>('/auth/saya', { signal }).catch(() => null);
+
+    return { pendaftaran, qr, live, aku };
   }, []);
 
   // Sesi bisa dibuka atau ditutup Divisi Acara kapan saja, jadi kartu "sedang
@@ -61,15 +79,44 @@ export default function Dashboard() {
   if (error) return <PesanError pesan={error} coba={() => muatUlang(false)} />;
 
   const lunas = data?.pendaftaran?.status === 'LUNAS';
+  const ps = data?.aku?.peserta ?? null;
 
   return (
     <div className="mx-auto max-w-xl space-y-5 pb-10">
-      <header className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <p className="text-xs text-slate-400">Halo,</p>
-        <h1 className="text-xl font-bold">{pengguna?.nama ?? 'Peserta'}</h1>
-        {data?.qr && (
-          <p className="text-sm text-slate-500">{data.qr.asal_sekolah}</p>
-        )}
+      {/* ---------------------------------------------------------------
+          Kepala halaman mengikuti mockup: kartu sampul bergambar air, foto
+          profil bulat menumpuk di tepi bawahnya, lalu nama besar dan asal
+          sekolah di sebelahnya.
+
+          Di mockup barisnya tertulis "Kelompok : Pluto". Tidak ada kolom
+          kelompok di database, dan mengarang satu di layar cuma akan jadi
+          tulisan yang tidak pernah berubah. Yang ditampilkan asal sekolah,
+          data yang memang dikumpulkan saat mendaftar.
+      --------------------------------------------------------------- */}
+      <header>
+        <div className="relative">
+          <div className="h-40 w-full overflow-hidden rounded-[2rem] sm:h-48">
+            <img src="/latar-air.jpg" alt="" className="h-full w-full object-cover" />
+          </div>
+
+          <div className="-mt-12 flex items-end gap-4 px-1">
+            <span className="h-24 w-24 shrink-0 rounded-full border-4 border-white bg-slate-200 sm:h-28 sm:w-28" />
+            <div className="min-w-0 flex-1 pb-1">
+              <h1 className="judul-tebal truncate text-2xl sm:text-3xl">
+                {pengguna?.nama ?? 'Peserta'}
+              </h1>
+              <p className="truncate text-sm font-bold text-slate-700">
+                {data?.qr?.asal_sekolah ?? data?.pendaftaran?.kode_registrasi ?? ''}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <BarLevel
+          xp={ps?.total_xp ?? 0}
+          level={ps?.level ?? null}
+          berikutnya={ps?.level_berikutnya ?? null}
+        />
       </header>
 
       {lunas && data?.qr ? (
@@ -110,6 +157,62 @@ export default function Dashboard() {
 }
 
 /* -------------------------------------------------------------------------- */
+
+/**
+ * Bar level di bawah nama, dengan ikon obor di ujung kirinya seperti di
+ * mockup. Yang ditulis besar nomor levelnya, tapi angka XP-nya tetap ada:
+ * "kurang 110 XP lagi" jauh lebih menggerakkan daripada "Level 3", dan itu
+ * yang membuat peserta mau mendatangi booth berikutnya.
+ */
+function BarLevel({
+  xp,
+  level,
+  berikutnya,
+}: {
+  xp: number;
+  level: { nomor: number; nama: string; xp_minimum: number } | null;
+  berikutnya: { nomor: number; nama: string; xp_minimum: number } | null;
+}) {
+  const dasar = level?.xp_minimum ?? 0;
+  const atas = berikutnya?.xp_minimum ?? null;
+
+  // Tanpa level berikutnya berarti sudah tertinggi, dan bar-nya penuh.
+  const persen = atas === null
+    ? 100
+    : Math.max(0, Math.min(100, ((xp - dasar) / Math.max(1, atas - dasar)) * 100));
+
+  const sisa = atas === null ? 0 : Math.max(0, atas - xp);
+
+  return (
+    <div className="mt-5 px-1">
+      <div className="flex items-end justify-between gap-3">
+        <p className="judul-tebal text-lg">
+          LEVEL {level?.nomor ?? 1}
+          <span className="ml-2 align-middle text-xs font-bold text-slate-500">
+            {level?.nama ?? 'Pencari Arah'}
+          </span>
+        </p>
+        <p className="shrink-0 text-xs font-extrabold text-slate-700">
+          {sisa > 0 ? `Kurang ${sisa} XP lagi !` : 'Keep Going !'}
+        </p>
+      </div>
+
+      <div className="mt-1.5 flex items-center gap-2">
+        <img src="/obor.png" alt="" aria-hidden className="h-7 w-auto shrink-0" />
+        <div className="h-3.5 flex-1 overflow-hidden rounded-full bg-slate-300">
+          <div
+            className="h-full rounded-full bg-linear-to-r from-merek-oranye via-merek-pink to-merek-navy transition-[width]"
+            style={{ width: `${persen}%` }}
+          />
+        </div>
+      </div>
+
+      <p className="mt-1 text-right text-[11px] font-bold text-slate-400">
+        {xp} XP
+      </p>
+    </div>
+  );
+}
 
 function KartuQr({ isi }: { isi: string }) {
   const kanvas = useRef<HTMLCanvasElement>(null);
@@ -162,15 +265,16 @@ function KartuQr({ isi }: { isi: string }) {
   }, []);
 
   return (
-    <section className="rounded-3xl border-2 border-utama-600 bg-white p-6 text-center shadow-sm dark:bg-slate-900">
-      <p className="text-[11px] font-black uppercase tracking-wider text-utama-700 dark:text-utama-100">
-        QR Identitas
-      </p>
+    <section className="pt-4 text-center">
+      <p className="judul-tebal text-xl tracking-wide">YOUR QR CODE</p>
       <p className="mt-1 text-xs text-slate-500">
         Tunjukkan ke panitia di pintu masuk dan ke alumni di booth
       </p>
 
-      <div className="mt-4 inline-block rounded-2xl bg-white p-3">
+      {/* Bingkai abu-abu tebal dengan sudut membulat, seperti di mockup.
+          Latarnya wajib putih polos: QR di atas warna atau gambar sering
+          gagal dibaca kamera HP yang murah. */}
+      <div className="mt-4 inline-block rounded-[1.75rem] border-[6px] border-slate-300 bg-white p-4 shadow-[0_10px_24px_-14px_rgba(15,42,70,0.5)]">
         <canvas ref={kanvas} />
       </div>
 

@@ -11,10 +11,12 @@
    pernah dipakai.
 ============================================================================= */
 
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { useMuat } from '../../lib/kait';
 import { Memuat } from '../../komponen/Keadaan';
+import { useSesi } from '../../lib/sesi';
 import type { Acara } from '../../types/api';
 
 interface Sponsor {
@@ -46,6 +48,8 @@ const TIER: { kunci: Sponsor['tier']; label: string; tinggi: string; kolom: stri
 ];
 
 export default function Landing() {
+  const { masuk } = useSesi();
+  const [slide, setSlide] = useState(0);
   const { data, memuat } = useMuat<Isi>(async (signal) => {
     const [pengaturan, acara, sponsor] = await Promise.all([
       api
@@ -65,58 +69,121 @@ export default function Landing() {
   const batas = data?.pengaturan?.batas_akhir_pembayaran as string | undefined;
   const dibuka = data?.pengaturan?.registrasi_dibuka !== false;
 
+  const namaAcara = (data?.acara ?? []).map((a) => a.nama).filter(Boolean);
+
   return (
-    <div className="space-y-12 pb-10">
-      <section className="kartu overflow-hidden border border-slate-200 text-center dark:border-slate-800">
-        <div className="bg-linear-to-br from-merek-navy via-merek-magenta to-merek-oranye px-6 py-14">
-          <p className="text-3xl font-black tracking-tight text-white sm:text-5xl">
-            CGTK 2027
-          </p>
-          <p className="mt-3 text-sm font-semibold text-white/90">
-            Campus Goes To Kampoeng
-          </p>
+    <div className="pb-14">
+      {/* -------------------------------------------------------------------
+          Hero. Fotonya dipotong dari mockup Figma, dan logo CGTK menumpuk di
+          tepi bawahnya persis seperti di gambar.
+
+          Panah kiri-kanan di mockup itu carousel. Fotonya cuma ada satu, jadi
+          yang digeser adalah nama rangkaian acara dari server. Panah yang
+          tidak melakukan apa-apa lebih buruk daripada tidak ada panah.
+      ------------------------------------------------------------------- */}
+      <section className="relative">
+        <div className="relative h-[46vw] max-h-80 min-h-44 w-full overflow-hidden">
+          <img
+            src="/hero-kampoeng.jpg"
+            alt=""
+            className="h-full w-full object-cover"
+          />
+
+          {namaAcara.length > 1 && (
+            <>
+              <button
+                type="button"
+                aria-label="Sebelumnya"
+                onClick={() => setSlide((n) => (n - 1 + namaAcara.length) % namaAcara.length)}
+                className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/80 text-white"
+              >
+                &#8249;
+              </button>
+              <button
+                type="button"
+                aria-label="Berikutnya"
+                onClick={() => setSlide((n) => (n + 1) % namaAcara.length)}
+                className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/80 text-white"
+              >
+                &#8250;
+              </button>
+            </>
+          )}
+
+          {namaAcara[slide] && (
+            <p className="absolute inset-x-0 bottom-3 px-14 text-center text-sm font-bold text-white drop-shadow">
+              {namaAcara[slide]}
+            </p>
+          )}
         </div>
 
-        <div className="px-6 py-8">
-          <h1 className="text-2xl font-black sm:text-3xl">
-            Cari tahu kampus dan jurusan yang benar-benar cocok
-          </h1>
-          <p className="mx-auto mt-3 max-w-md text-sm text-slate-600 dark:text-slate-300">
-            Ikut kuis minat, datangi booth kampus dan jurusan, ngobrol langsung
-            dengan alumninya, dan kumpulkan XP.
+        <img
+          src="/logo-cgtk.png"
+          alt="CGTK"
+          className="relative z-10 mx-auto -mt-10 w-48 max-w-[55%] sm:w-64"
+        />
+      </section>
+
+      {/* Tulisan raksasa Campus Goes To Kampoeng di belakang isi halaman,
+          seperti di mockup. aria-hidden: buat pembaca layar ini cuma
+          pengulangan nama acara yang sudah disebut di tempat lain. */}
+      <div className="relative overflow-hidden px-6 pt-4">
+        <p
+          aria-hidden
+          className="pointer-events-none absolute -left-6 top-6 select-none text-[22vw] font-black leading-[0.82] tracking-tight text-slate-900/[0.045] sm:text-[9rem]"
+        >
+          Campus
+          <br />
+          Goes
+          <br />
+          To
+          <br />
+          Kampoeng
+        </p>
+
+        <div className="relative mx-auto max-w-5xl">
+          <h1 className="judul-tebal text-[2.7rem] sm:text-6xl">Selamat Datang !</h1>
+
+          <p className="mt-2 max-w-sm text-base leading-snug text-slate-700">
+            {masuk
+              ? 'Senang kamu kembali. Lanjutkan dari dashboard kamu.'
+              : 'Sepertinya anda belum memiliki akun silahkan masuk atau daftar'}
           </p>
 
-          {harga && (
-            <p className="mt-6 text-2xl font-black text-utama-700 dark:text-utama-100">
-              {harga}
-            </p>
-          )}
-          {batas && (
-            <p className="mt-1 text-xs text-slate-500">
-              Pendaftaran ditutup {batas}
-            </p>
-          )}
-
-          <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            {dibuka ? (
-              <Link to="/masuk" className="tombol-utama w-full px-8 py-3.5 sm:w-auto">
-                Daftar Sekarang
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            {masuk ? (
+              <Link to="/dashboard" className="tombol-utama px-7 py-3 text-[15px]">
+                Buka Dashboard &gt;
+              </Link>
+            ) : dibuka ? (
+              <Link to="/masuk" className="tombol-utama px-7 py-3 text-[15px]">
+                Masuk atau Daftar &gt;
               </Link>
             ) : (
-              <span className="w-full cursor-not-allowed rounded-2xl bg-slate-200 px-8 py-3.5 font-bold text-slate-500 sm:w-auto dark:bg-slate-800">
+              <span className="cursor-not-allowed rounded-full bg-slate-200 px-7 py-3 text-[15px] font-bold text-slate-500">
                 Pendaftaran Ditutup
               </span>
             )}
+
             <Link
               to="/cek-status"
-              className="w-full rounded-2xl border border-slate-300 px-8 py-3.5 font-bold sm:w-auto dark:border-slate-700"
+              className="rounded-full border border-slate-300 px-7 py-3 text-[15px] font-bold text-slate-700"
             >
               Cek Status
             </Link>
           </div>
-        </div>
-      </section>
 
+          {(harga || batas) && (
+            <p className="mt-4 text-sm text-slate-500">
+              {harga && <span className="font-bold text-merek-magenta">{harga}</span>}
+              {harga && batas && ' · '}
+              {batas && <>Pendaftaran ditutup {batas}</>}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="mx-auto mt-12 max-w-5xl space-y-12 px-4">
       {(data?.acara ?? []).length > 0 && (
         <section>
           <h2 className="text-lg font-bold">Rangkaian Acara</h2>
@@ -174,6 +241,7 @@ export default function Landing() {
           </div>
         </section>
       )}
+      </div>
     </div>
   );
 }
