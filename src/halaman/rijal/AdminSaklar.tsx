@@ -24,7 +24,7 @@ import type { Sesi, StatusSesi } from '../../types/api';
 
 export default function AdminSaklar() {
   const { data, memuat, error, muatUlang } = useMuat<Sesi[]>(
-    (signal) => api.get<Sesi[]>('/events/sessions?semua=1', { signal }),
+    (signal) => api.get<Sesi[]>('/events/sessions/admin', { signal }),
     [],
   );
 

@@ -25,10 +25,14 @@ interface Sponsor {
   url: string | null;
 }
 
+/** Server sudah mengelompokkan sponsor per tier, jadi tidak perlu disaring
+ *  lagi di sini. Bentuknya objek, bukan daftar datar. */
+type SponsorPerTier = Record<Sponsor['tier'], Sponsor[]>;
+
 interface Isi {
   pengaturan: Record<string, unknown>;
   acara: Acara[];
-  sponsor: Sponsor[];
+  sponsor: SponsorPerTier;
 }
 
 // Empat tier, sesuai yang diterima database. Mockup baru menggambar tiga;
@@ -48,9 +52,11 @@ export default function Landing() {
         .get<Record<string, unknown>>('/settings/publik', { signal, tanpaLogin: true })
         .catch(() => ({}) as Record<string, unknown>),
       api.get<Acara[]>('/events', { signal, tanpaLogin: true }).catch(() => []),
-      api.get<Sponsor[]>('/sponsors', { signal, tanpaLogin: true }).catch(() => []),
+      api
+        .get<SponsorPerTier>('/sponsors', { signal, tanpaLogin: true })
+        .catch(() => ({}) as SponsorPerTier),
     ]);
-    return { pengaturan, acara: acara ?? [], sponsor: sponsor ?? [] };
+    return { pengaturan, acara: acara ?? [], sponsor: sponsor ?? ({} as SponsorPerTier) };
   }, []);
 
   if (memuat) return <Memuat />;
@@ -135,12 +141,12 @@ export default function Landing() {
         </section>
       )}
 
-      {(data?.sponsor ?? []).length > 0 && (
+      {Object.values(data?.sponsor ?? {}).some((v) => v.length > 0) && (
         <section>
           <h2 className="text-lg font-bold">Didukung Oleh</h2>
           <div className="mt-4 space-y-6">
             {TIER.map((t) => {
-              const isi = (data?.sponsor ?? []).filter((s) => s.tier === t.kunci);
+              const isi = data?.sponsor?.[t.kunci] ?? [];
               if (isi.length === 0) return null;
               return (
                 <div key={t.kunci}>
