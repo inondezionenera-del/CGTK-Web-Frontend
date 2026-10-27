@@ -1,0 +1,15 @@
+{
+  // Frontend CGTK 2027. Bukan Worker berisi kode; isinya cuma hasil build
+  // Vite yang disajikan sebagai aset statis.
+  //
+  // not_found_handling single-page-application yang mengerjakan tugas
+  // public/_redirects: alamat yang tidak cocok dengan berkas mana pun
+  // dikembalikan sebagai index.html dengan status 200, supaya peserta yang
+  // membuka /campuses langsung dari tautan WhatsApp tidak dapat 404.
+  "name": "cgtk-web",
+  "compatibility_date": "2026-10-23",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}

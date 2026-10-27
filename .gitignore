@@ -13,3 +13,6 @@ tsconfig.tsbuildinfo
 
 # keluaran graphify, bukan bagian aplikasi
 graphify-out/
+
+# Konfigurasi wrangler untuk deploy, bukan rahasia. Biarkan ter-commit.
+.wrangler/
