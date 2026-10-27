@@ -15,7 +15,7 @@ import { WajibLogin } from './komponen/WajibLogin';
 import { Memuat } from './komponen/Keadaan';
 import { OverlayPengumuman } from './komponen/Pengumuman';
 
-import Beranda from './halaman/Beranda';
+import Landing from './halaman/fariz/Landing';
 import TidakDitemukan from './halaman/TidakDitemukan';
 import BelumDibuat from './halaman/BelumDibuat';
 import HalamanInfo from './halaman/rijal/HalamanInfo';
@@ -40,7 +40,7 @@ export default function App() {
     <OverlayPengumuman />
     <Routes>
       <Route element={<Kerangka />}>
-        <Route index element={<Beranda />} />
+        <Route index element={<Landing />} />
 
         {/* ---------------- RIJAL ---------------- */}
         <Route path="/p/:slug" element={<HalamanInfo />} />
