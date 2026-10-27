@@ -77,6 +77,75 @@ export interface Sesi {
 
 export type JenisKampus = 'NEGERI' | 'SWASTA' | 'KEDINASAN';
 
+/* -----------------------------------------------------------------------------
+   Form Builder.
+
+   Pertanyaan pendaftaran tidak tetap: Divisi Administrasi menambahnya sendiri
+   lewat halaman admin. Jadi formnya disusun dari daftar ini, bukan ditulis
+   satu per satu di program. Keenam tipe di bawah semuanya harus ditangani,
+   termasuk yang belum dipakai hari ini: satu field bertipe TANGGAL yang jatuh
+   ke cabang "tidak dikenali" akan hilang dari form tanpa pesan apa pun, dan
+   peserta mengirim pendaftaran yang datanya bolong tanpa ada yang tahu.
+----------------------------------------------------------------------------- */
+
+export type TipeField =
+  | 'TEKS'
+  | 'ANGKA'
+  | 'PILIHAN'
+  | 'PILIHAN_GANDA'
+  | 'TANGGAL'
+  | 'YA_TIDAK';
+
+export interface FormField {
+  kunci: string;
+  label: string;
+  tipe: TipeField;
+  opsi: string[] | null;
+  wajib: boolean;
+  bisa_diedit_peserta: boolean;
+  bantuan: string | null;
+  urutan: number;
+}
+
+export interface Pendaftaran {
+  id: string;
+  kode_registrasi: string;
+  status: StatusPendaftaran;
+  profil_lengkap: boolean;
+  created_at: string;
+}
+
+/** GET /payments/cara-bayar */
+export interface CaraBayar {
+  profil_lengkap: boolean;
+  kode_registrasi: string;
+  /** null kalau profil belum lengkap. Server yang menahannya, bukan kita. */
+  link_bayar: string | null;
+  harga_tampil: string | null;
+  /** Ditulis Divisi Administrasi, panjangnya bisa berubah kapan saja. */
+  petunjuk: string | null;
+  batas_akhir: string | null;
+  /** false kalau Administrasi belum mengisi alamat form pembayaran. */
+  form_tersedia: boolean;
+  field_belum_diisi?: string[];
+}
+
+/** GET /qr/saya */
+export interface QrSaya {
+  isi_qr: string;
+  nama: string;
+  asal_sekolah: string;
+  terbit_at: string;
+}
+
+/** GET /cek-status?kode= — publik, sengaja tipis. */
+export interface StatusPublik {
+  kode_registrasi: string;
+  nama: string;
+  status: StatusPendaftaran;
+  pesan: string;
+}
+
 export interface Kampus {
   id: number;
   nama: string;

@@ -16,6 +16,11 @@ import Beranda from './halaman/Beranda';
 import TidakDitemukan from './halaman/TidakDitemukan';
 import BelumDibuat from './halaman/BelumDibuat';
 import HalamanInfo from './halaman/rijal/HalamanInfo';
+import CekStatus from './halaman/rijal/CekStatus';
+import Masuk from './halaman/fariz/Masuk';
+import Daftar from './halaman/fariz/Daftar';
+import Bayar from './halaman/fariz/Bayar';
+import Dashboard from './halaman/fariz/Dashboard';
 
 export default function App() {
   return (
@@ -31,7 +36,7 @@ export default function App() {
         <Route path="/announcements" element={<BelumDibuat punya="RIJAL" />} />
         <Route path="/booths" element={<BelumDibuat punya="RIJAL" />} />
         <Route path="/booths/:id" element={<BelumDibuat punya="RIJAL" />} />
-        <Route path="/cek-status" element={<BelumDibuat punya="RIJAL" />} />
+        <Route path="/cek-status" element={<CekStatus />} />
         <Route
           path="/admin/jadwal"
           element={<WajibLogin><BelumDibuat punya="RIJAL" /></WajibLogin>}
@@ -51,10 +56,10 @@ export default function App() {
         />
 
         {/* ---------------- FARIZ ---------------- */}
-        <Route path="/masuk" element={<BelumDibuat punya="Fariz" />} />
-        <Route path="/daftar" element={<BelumDibuat punya="Fariz" />} />
-        <Route path="/bayar" element={<WajibLogin><BelumDibuat punya="Fariz" /></WajibLogin>} />
-        <Route path="/dashboard" element={<WajibLogin><BelumDibuat punya="Fariz" /></WajibLogin>} />
+        <Route path="/masuk" element={<Masuk />} />
+        <Route path="/daftar" element={<WajibLogin><Daftar /></WajibLogin>} />
+        <Route path="/bayar" element={<WajibLogin><Bayar /></WajibLogin>} />
+        <Route path="/dashboard" element={<WajibLogin><Dashboard /></WajibLogin>} />
         <Route path="/scan" element={<WajibLogin><BelumDibuat punya="Fariz" /></WajibLogin>} />
         <Route path="/admin" element={<WajibLogin><BelumDibuat punya="Fariz" /></WajibLogin>} />
 

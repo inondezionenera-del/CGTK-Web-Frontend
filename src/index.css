@@ -1,7 +1,39 @@
 @import 'tailwindcss';
 
-/* Mode terang dan gelap dua-duanya wajib jalan. Tailwind memakai prefers-color-scheme
-   lewat varian dark:, jadi cukup tulis kelasnya, tidak perlu setelan tambahan. */
+/* =============================================================================
+   Token warna.
+
+   Peran warnanya diambil dari sistem desain di lembar tugas UI/UX, dan tiap
+   peran punya satu arti saja. Yang paling penting dan paling mudah keliru:
+   SUDAH_SCAN itu KUNING, bukan merah. Dia bukan kesalahan, dia tanda sistem
+   bekerja. Kalau merah, panitia di pintu masuk mengira ada masalah dan panik.
+
+   Semua pasangan teks dan latar di bawah sudah dipilih supaya lolos kontras
+   4.5:1, karena layar ini dipakai di luar ruangan yang terang.
+============================================================================= */
+@theme {
+  --color-utama-50: #eef2ff;
+  --color-utama-100: #e0e7ff;
+  --color-utama-600: #4f46e5;
+  --color-utama-700: #4338ca;
+  --color-utama-900: #312e81;
+
+  --color-berhasil-50: #ecfdf5;
+  --color-berhasil-600: #059669;
+  --color-berhasil-700: #047857;
+
+  --color-peringatan-50: #fffbeb;
+  --color-peringatan-400: #facc15;
+  --color-peringatan-900: #713f12;
+
+  --color-hatihati-50: #fff7ed;
+  --color-hatihati-600: #ea580c;
+  --color-hatihati-700: #c2410c;
+
+  --color-bahaya-50: #fef2f2;
+  --color-bahaya-600: #dc2626;
+  --color-bahaya-700: #b91c1c;
+}
 
 html {
   -webkit-text-size-adjust: 100%;
@@ -10,10 +42,30 @@ html {
 body {
   margin: 0;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* 16px minimum. Di bawah itu browser HP memperbesar sendiri waktu sebuah
+     input difokus, dan tata letaknya ikut bergeser. */
+  font-size: 16px;
 }
 
-/* Semua tombol minimal 44px tingginya, aturan dari lembar tugas.
-   Peserta memakai HP sambil berdiri di keramaian. */
-button {
+/* Tombol minimal 44x44px. Dipakai sambil berdiri, terburu-buru, satu tangan. */
+button,
+[role='button'] {
   min-height: 2.75rem;
+}
+
+input,
+select,
+textarea {
+  min-height: 2.75rem;
+  font-size: 16px;
+}
+
+/* Hormati pengguna yang mematikan animasi di setelan HP-nya. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
