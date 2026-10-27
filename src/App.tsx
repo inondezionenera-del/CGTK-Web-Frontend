@@ -8,9 +8,11 @@
    Jangan mengubah baris milik orang lain tanpa ngomong dulu.
 ============================================================================= */
 
+import { Suspense, lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Kerangka } from './komponen/Kerangka';
 import { WajibLogin } from './komponen/WajibLogin';
+import { Memuat } from './komponen/Keadaan';
 
 import Beranda from './halaman/Beranda';
 import TidakDitemukan from './halaman/TidakDitemukan';
@@ -20,10 +22,16 @@ import CekStatus from './halaman/rijal/CekStatus';
 import Masuk from './halaman/fariz/Masuk';
 import Daftar from './halaman/fariz/Daftar';
 import Bayar from './halaman/fariz/Bayar';
-import Dashboard from './halaman/fariz/Dashboard';
+
+// Dua halaman ini membawa pustaka berat: pembaca QR untuk scanner, penggambar
+// QR untuk dashboard. Dimuat hanya ketika dibuka, supaya halaman pendaftaran
+// yang dipakai lima ratus orang di rumah tetap ringan di sinyal lambat.
+const Dashboard = lazy(() => import('./halaman/fariz/Dashboard'));
+const Scanner = lazy(() => import('./halaman/fariz/Scanner'));
 
 export default function App() {
   return (
+    <Suspense fallback={<Memuat />}>
     <Routes>
       <Route element={<Kerangka />}>
         <Route index element={<Beranda />} />
@@ -60,7 +68,7 @@ export default function App() {
         <Route path="/daftar" element={<WajibLogin><Daftar /></WajibLogin>} />
         <Route path="/bayar" element={<WajibLogin><Bayar /></WajibLogin>} />
         <Route path="/dashboard" element={<WajibLogin><Dashboard /></WajibLogin>} />
-        <Route path="/scan" element={<WajibLogin><BelumDibuat punya="Fariz" /></WajibLogin>} />
+        <Route path="/scan" element={<WajibLogin><Scanner /></WajibLogin>} />
         <Route path="/admin" element={<WajibLogin><BelumDibuat punya="Fariz" /></WajibLogin>} />
 
         {/* ---------------- HAQI ---------------- */}
@@ -76,5 +84,6 @@ export default function App() {
         <Route path="*" element={<TidakDitemukan />} />
       </Route>
     </Routes>
+    </Suspense>
   );
 }

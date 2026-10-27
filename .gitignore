@@ -10,3 +10,6 @@ dist/
 
 # hasil build
 tsconfig.tsbuildinfo
+
+# keluaran graphify, bukan bagian aplikasi
+graphify-out/
