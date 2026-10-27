@@ -3,21 +3,35 @@
 /* =============================================================================
    Token warna.
 
-   Peran warnanya diambil dari sistem desain di lembar tugas UI/UX, dan tiap
-   peran punya satu arti saja. Yang paling penting dan paling mudah keliru:
-   SUDAH_SCAN itu KUNING, bukan merah. Dia bukan kesalahan, dia tanda sistem
-   bekerja. Kalau merah, panitia di pintu masuk mengira ada masalah dan panik.
+   Warna mereknya diambil dari logo CGTK di Figma: biru tua, magenta, dan
+   oranye. Tombol utama memakai gradasi magenta ke pink seperti di mockup,
+   tombol kedua oranye.
 
-   Semua pasangan teks dan latar di bawah sudah dipilih supaya lolos kontras
-   4.5:1, karena layar ini dipakai di luar ruangan yang terang.
+   Warna peran dipisah dari warna merek, dan tiap peran punya satu arti saja.
+   Yang paling penting dan paling mudah keliru: SUDAH_SCAN itu KUNING, bukan
+   merah. Dia bukan kesalahan, dia tanda sistem bekerja. Kalau merah, panitia
+   di pintu masuk mengira ada masalah lalu berhenti, dan antreannya macet.
+
+   Pasangan teks dan latar di bawah dipilih supaya lolos kontras 4.5:1, karena
+   layar ini dipakai di luar ruangan yang terang. Di mockup ada beberapa tempat
+   yang belum lolos, misalnya tulisan putih di atas kuning terang; di sini teks
+   di atas kuning selalu gelap.
 ============================================================================= */
 @theme {
-  --color-utama-50: #eef2ff;
-  --color-utama-100: #e0e7ff;
-  --color-utama-600: #4f46e5;
-  --color-utama-700: #4338ca;
-  --color-utama-900: #312e81;
+  /* Merek, dari logo */
+  --color-merek-navy: #1b3a5c;
+  --color-merek-magenta: #a0266e;
+  --color-merek-pink: #d81b7f;
+  --color-merek-oranye: #f2743a;
 
+  /* Utama: dipakai untuk tombol dan tautan */
+  --color-utama-50: #fdf2f8;
+  --color-utama-100: #fce7f3;
+  --color-utama-600: #a0266e;
+  --color-utama-700: #85205c;
+  --color-utama-900: #4a1133;
+
+  /* Peran */
   --color-berhasil-50: #ecfdf5;
   --color-berhasil-600: #059669;
   --color-berhasil-700: #047857;
@@ -58,6 +72,41 @@ select,
 textarea {
   min-height: 2.75rem;
   font-size: 16px;
+}
+
+/* -----------------------------------------------------------------------------
+   Bentuk dari mockup: kartu putih sangat membulat dengan bayangan lembut,
+   tombol utama bergradasi, tombol kedua oranye.
+----------------------------------------------------------------------------- */
+@utility kartu {
+  border-radius: 1.75rem;
+  background: white;
+  box-shadow: 0 8px 24px -12px rgb(27 58 92 / 0.25);
+
+  /* Mode gelap ditangani di dalam utility-nya, bukan lewat @media terpisah:
+     @utility tidak boleh bersarang di dalam at-rule lain. */
+  @media (prefers-color-scheme: dark) {
+    background: var(--color-slate-900);
+    box-shadow: none;
+  }
+}
+
+@utility tombol-utama {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-merek-magenta),
+    var(--color-merek-pink)
+  );
+  color: white;
+  font-weight: 700;
+  border-radius: 1rem;
+}
+
+@utility tombol-kedua {
+  background-color: var(--color-merek-oranye);
+  color: white;
+  font-weight: 700;
+  border-radius: 1rem;
 }
 
 /* Hormati pengguna yang mematikan animasi di setelan HP-nya. */
