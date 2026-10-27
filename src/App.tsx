@@ -33,6 +33,7 @@ import Bayar from './halaman/fariz/Bayar';
 // yang dipakai lima ratus orang di rumah tetap ringan di sinyal lambat.
 const Dashboard = lazy(() => import('./halaman/fariz/Dashboard'));
 const Scanner = lazy(() => import('./halaman/fariz/Scanner'));
+const ScannerBooth = lazy(() => import('./halaman/haqi/ScannerBooth'));
 
 export default function App() {
   return (
@@ -80,10 +81,8 @@ export default function App() {
         <Route path="/passport" element={<WajibLogin><BelumDibuat punya="Haqi" /></WajibLogin>} />
         <Route path="/leaderboard" element={<BelumDibuat punya="Haqi" />} />
         <Route path="/missions" element={<WajibLogin><BelumDibuat punya="Haqi" /></WajibLogin>} />
-        <Route
-          path="/scan-booth"
-          element={<WajibLogin><BelumDibuat punya="Haqi" /></WajibLogin>}
-        />
+        <Route path="/scan-booth" element={<WajibLogin><ScannerBooth /></WajibLogin>} />
+        <Route path="/scanner/booth" element={<WajibLogin><ScannerBooth /></WajibLogin>} />
 
         <Route path="*" element={<TidakDitemukan />} />
       </Route>
