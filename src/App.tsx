@@ -21,6 +21,8 @@ import BelumDibuat from './halaman/BelumDibuat';
 import HalamanInfo from './halaman/rijal/HalamanInfo';
 import CekStatus from './halaman/rijal/CekStatus';
 import Jadwal from './halaman/rijal/Jadwal';
+import Pengumuman from './halaman/rijal/Pengumuman';
+import { DaftarBooth, DetailBooth } from './halaman/rijal/Booth';
 import Kampus from './halaman/rijal/Kampus';
 import AdminSaklar from './halaman/rijal/AdminSaklar';
 import AdminLunas from './halaman/fariz/AdminLunas';
@@ -34,6 +36,9 @@ import Bayar from './halaman/fariz/Bayar';
 const Dashboard = lazy(() => import('./halaman/fariz/Dashboard'));
 const Scanner = lazy(() => import('./halaman/fariz/Scanner'));
 const ScannerBooth = lazy(() => import('./halaman/haqi/ScannerBooth'));
+const Paspor = lazy(() => import('./halaman/haqi/Paspor'));
+const Peringkat = lazy(() => import('./halaman/haqi/Peringkat'));
+const MisiHalaman = lazy(() => import('./halaman/haqi/Misi'));
 
 export default function App() {
   return (
@@ -48,9 +53,9 @@ export default function App() {
         <Route path="/campuses" element={<Kampus />} />
         <Route path="/campuses/:id" element={<BelumDibuat punya="RIJAL" />} />
         <Route path="/schedule" element={<Jadwal />} />
-        <Route path="/announcements" element={<BelumDibuat punya="RIJAL" />} />
-        <Route path="/booths" element={<BelumDibuat punya="RIJAL" />} />
-        <Route path="/booths/:id" element={<BelumDibuat punya="RIJAL" />} />
+        <Route path="/announcements" element={<Pengumuman />} />
+        <Route path="/booths" element={<DaftarBooth />} />
+        <Route path="/booths/:id" element={<DetailBooth />} />
         <Route path="/cek-status" element={<CekStatus />} />
         <Route path="/admin/jadwal" element={<WajibLogin><AdminSaklar /></WajibLogin>} />
         <Route
@@ -78,9 +83,9 @@ export default function App() {
 
         {/* ---------------- HAQI ---------------- */}
         <Route path="/quiz" element={<WajibLogin><BelumDibuat punya="Haqi" /></WajibLogin>} />
-        <Route path="/passport" element={<WajibLogin><BelumDibuat punya="Haqi" /></WajibLogin>} />
-        <Route path="/leaderboard" element={<BelumDibuat punya="Haqi" />} />
-        <Route path="/missions" element={<WajibLogin><BelumDibuat punya="Haqi" /></WajibLogin>} />
+        <Route path="/passport" element={<WajibLogin><Paspor /></WajibLogin>} />
+        <Route path="/leaderboard" element={<WajibLogin><Peringkat /></WajibLogin>} />
+        <Route path="/missions" element={<WajibLogin><MisiHalaman /></WajibLogin>} />
         <Route path="/scan-booth" element={<WajibLogin><ScannerBooth /></WajibLogin>} />
         <Route path="/scanner/booth" element={<WajibLogin><ScannerBooth /></WajibLogin>} />
 
