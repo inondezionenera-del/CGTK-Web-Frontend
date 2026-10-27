@@ -17,12 +17,14 @@ import { OverlayPengumuman } from './komponen/Pengumuman';
 
 import Landing from './halaman/fariz/Landing';
 import TidakDitemukan from './halaman/TidakDitemukan';
-import BelumDibuat from './halaman/BelumDibuat';
 import HalamanInfo from './halaman/rijal/HalamanInfo';
 import CekStatus from './halaman/rijal/CekStatus';
 import Jadwal from './halaman/rijal/Jadwal';
 import Pengumuman from './halaman/rijal/Pengumuman';
 import { DaftarBooth, DetailBooth } from './halaman/rijal/Booth';
+import DetailKampus from './halaman/rijal/DetailKampus';
+import AdminSponsor from './halaman/rijal/AdminSponsor';
+import { DashboardLO, StatistikLO } from './halaman/rijal/LO';
 import Kampus from './halaman/rijal/Kampus';
 import AdminSaklar from './halaman/rijal/AdminSaklar';
 import AdminLunas from './halaman/fariz/AdminLunas';
@@ -39,6 +41,8 @@ const ScannerBooth = lazy(() => import('./halaman/haqi/ScannerBooth'));
 const Paspor = lazy(() => import('./halaman/haqi/Paspor'));
 const Peringkat = lazy(() => import('./halaman/haqi/Peringkat'));
 const MisiHalaman = lazy(() => import('./halaman/haqi/Misi'));
+const Kuis = lazy(() => import('./halaman/haqi/Kuis'));
+const PosterBooth = lazy(() => import('./halaman/rijal/PosterBooth'));
 
 export default function App() {
   return (
@@ -51,26 +55,17 @@ export default function App() {
         {/* ---------------- RIJAL ---------------- */}
         <Route path="/p/:slug" element={<HalamanInfo />} />
         <Route path="/campuses" element={<Kampus />} />
-        <Route path="/campuses/:id" element={<BelumDibuat punya="RIJAL" />} />
+        <Route path="/campuses/:id" element={<DetailKampus />} />
         <Route path="/schedule" element={<Jadwal />} />
         <Route path="/announcements" element={<Pengumuman />} />
         <Route path="/booths" element={<DaftarBooth />} />
         <Route path="/booths/:id" element={<DetailBooth />} />
         <Route path="/cek-status" element={<CekStatus />} />
         <Route path="/admin/jadwal" element={<WajibLogin><AdminSaklar /></WajibLogin>} />
-        <Route
-          path="/admin/sponsor"
-          element={<WajibLogin><BelumDibuat punya="RIJAL" /></WajibLogin>}
-        />
-        <Route
-          path="/admin/booths/poster"
-          element={<WajibLogin><BelumDibuat punya="RIJAL" /></WajibLogin>}
-        />
-        <Route path="/lo" element={<WajibLogin><BelumDibuat punya="RIJAL" /></WajibLogin>} />
-        <Route
-          path="/lo/statistik"
-          element={<WajibLogin><BelumDibuat punya="RIJAL" /></WajibLogin>}
-        />
+        <Route path="/admin/sponsor" element={<WajibLogin><AdminSponsor /></WajibLogin>} />
+        <Route path="/admin/booths/poster" element={<WajibLogin><PosterBooth /></WajibLogin>} />
+        <Route path="/lo" element={<WajibLogin><DashboardLO /></WajibLogin>} />
+        <Route path="/lo/statistik" element={<WajibLogin><StatistikLO /></WajibLogin>} />
 
         {/* ---------------- FARIZ ---------------- */}
         <Route path="/masuk" element={<Masuk />} />
@@ -82,7 +77,7 @@ export default function App() {
         <Route path="/admin/lunas" element={<WajibLogin><AdminLunas /></WajibLogin>} />
 
         {/* ---------------- HAQI ---------------- */}
-        <Route path="/quiz" element={<WajibLogin><BelumDibuat punya="Haqi" /></WajibLogin>} />
+        <Route path="/quiz" element={<WajibLogin><Kuis /></WajibLogin>} />
         <Route path="/passport" element={<WajibLogin><Paspor /></WajibLogin>} />
         <Route path="/leaderboard" element={<WajibLogin><Peringkat /></WajibLogin>} />
         <Route path="/missions" element={<WajibLogin><MisiHalaman /></WajibLogin>} />
