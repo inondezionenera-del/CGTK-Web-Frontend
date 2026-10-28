@@ -189,7 +189,7 @@ export default function ScannerBooth() {
   return (
     <div className="fixed inset-0 z-30 flex flex-col bg-slate-950">
       <div className="flex items-center justify-between p-3 text-white">
-        <span className="text-sm font-bold">Scan Peserta</span>
+        <h1 className="text-sm font-bold">Scan Peserta</h1>
         <button
           type="button"
           onClick={() => setBukaBatal(true)}
