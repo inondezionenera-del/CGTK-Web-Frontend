@@ -41,10 +41,15 @@ interface Jurusan {
 
 interface Alumni {
   id: number;
+  email_undangan: string;
+  status: 'DIUNDANG' | 'AKTIF' | 'NONAKTIF';
   angkatan: number | null;
-  users?: { nama: string } | null;
-  universities?: { id: number; nama: string; singkatan: string } | null;
-  majors?: { id: number; nama: string } | null;
+  kontak: string | null;
+  bio: string | null;
+  sudah_masuk: boolean;
+  nama: string | null;
+  kampus: { id: number; nama: string; singkatan: string } | null;
+  jurusan: { id: number; nama: string } | null;
 }
 
 interface HasilBaris {
@@ -64,7 +69,12 @@ export default function AdminAlumni() {
     const [kampus, jurusan, alumni] = await Promise.all([
       api.get<Kampus[]>('/universities', { signal }).catch(() => []),
       api.get<Jurusan[]>('/majors', { signal }).catch(() => []),
-      api.get<Alumni[]>('/representatives', { signal }).catch(() => []),
+      // /representatives/admin, bukan /representatives.
+      //
+      // Yang publik hanya memuat alumni berstatus AKTIF, karena dia dipakai
+      // halaman kampus yang dilihat peserta. Panitia justru paling butuh
+      // melihat yang masih DIUNDANG: itu yang perlu ditagih sebelum hari-H.
+      api.get<Alumni[]>('/representatives/admin', { signal }).catch(() => []),
     ]);
     return { kampus: kampus ?? [], jurusan: jurusan ?? [], alumni: alumni ?? [] };
   }, []);
@@ -122,30 +132,12 @@ export default function AdminAlumni() {
         />
       )}
 
-      <section>
-        <h2 className="text-xs font-black uppercase tracking-wider text-slate-400">
-          Alumni Aktif ({data?.alumni.length ?? 0})
-        </h2>
-        {(data?.alumni ?? []).length === 0 ? (
-          <Kosong
-            judul="Belum ada alumni aktif"
-            keterangan="Yang baru diundang muncul di sini setelah mereka masuk pertama kali dengan akun Google-nya."
-          />
-        ) : (
-          <ul className="mt-2 space-y-2">
-            {(data?.alumni ?? []).map((a) => (
-              <li key={a.id} className="kartu p-4 ring-1 ring-slate-200">
-                <p className="font-black">{a.users?.nama ?? 'Alumni'}</p>
-                <p className="text-sm text-slate-600">
-                  {[a.universities?.singkatan, a.majors?.nama, a.angkatan]
-                    .filter(Boolean)
-                    .join(' · ')}
-                </p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <DaftarAlumni
+        alumni={data?.alumni ?? []}
+        kampus={data?.kampus ?? []}
+        jurusan={data?.jurusan ?? []}
+        selesai={() => muatUlang(false)}
+      />
     </div>
   );
 }
@@ -456,5 +448,295 @@ function Massal({
         </div>
       )}
     </section>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+
+const SARINGAN = [
+  { nilai: '', label: 'Semua' },
+  { nilai: 'DIUNDANG', label: 'Diundang' },
+  { nilai: 'AKTIF', label: 'Aktif' },
+  { nilai: 'NONAKTIF', label: 'Nonaktif' },
+];
+
+/**
+ * Daftar alumni beserta penyuntingannya.
+ *
+ * Disaring dan dicari di sisi layar, bukan dengan memanggil server tiap
+ * ketukan: jumlah alumni belasan sampai puluhan orang, bukan ribuan, dan satu
+ * permintaan per huruf cuma membebani API di hari acara tanpa manfaat.
+ */
+function DaftarAlumni({
+  alumni,
+  kampus,
+  jurusan,
+  selesai,
+}: {
+  alumni: Alumni[];
+  kampus: Kampus[];
+  jurusan: Jurusan[];
+  selesai: () => void;
+}) {
+  const [saring, setSaring] = useState('');
+  const [cari, setCari] = useState('');
+  const [sunting, setSunting] = useState<number | null>(null);
+
+  const q = cari.trim().toLowerCase();
+  const tampil = alumni.filter((a) => {
+    if (saring && a.status !== saring) return false;
+    if (!q) return true;
+    return [a.nama, a.email_undangan, a.kampus?.singkatan, a.jurusan?.nama]
+      .filter(Boolean)
+      .some((x) => String(x).toLowerCase().includes(q));
+  });
+
+  const belumMasuk = alumni.filter((a) => !a.sudah_masuk).length;
+
+  return (
+    <section className="space-y-3">
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="text-xs font-black uppercase tracking-wider text-slate-400">
+          Alumni ({alumni.length})
+        </h2>
+        {belumMasuk > 0 && (
+          <span className="text-xs font-bold text-hatihati-700">
+            {belumMasuk} belum pernah masuk
+          </span>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {SARINGAN.map((s) => (
+          <button
+            key={s.nilai || 'semua'}
+            type="button"
+            onClick={() => setSaring(s.nilai)}
+            className={`rounded-full px-4 py-2 text-sm font-black ${
+              saring === s.nilai ? 'tombol-utama' : 'bg-slate-100 text-slate-700'
+            }`}
+          >
+            {s.label}
+          </button>
+        ))}
+      </div>
+
+      <input
+        value={cari}
+        onChange={(e) => setCari(e.target.value)}
+        placeholder="Cari nama, email, kampus, atau jurusan"
+        aria-label="Cari alumni"
+        className="isian outline-none focus:ring-2 focus:ring-merek-magenta/40"
+      />
+
+      {tampil.length === 0 ? (
+        <Kosong
+          judul={alumni.length === 0 ? 'Belum ada alumni' : 'Tidak ada yang cocok'}
+          keterangan={
+            alumni.length === 0
+              ? 'Undang lewat formulir di atas. Mereka muncul di sini dengan status Diundang.'
+              : 'Coba kata kunci lain atau ganti saringannya.'
+          }
+        />
+      ) : (
+        <ul className="space-y-2.5">
+          {tampil.map((a) => (
+            <li key={a.id} className="kartu p-4 ring-1 ring-slate-200">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-black">
+                    {a.nama ?? a.email_undangan.split('@')[0]}
+                  </p>
+                  <p className="truncate text-sm text-slate-600">
+                    {[a.kampus?.singkatan, a.jurusan?.nama, a.angkatan]
+                      .filter(Boolean)
+                      .join(' \u00b7 ') || 'Kampus dan jurusan belum diisi'}
+                  </p>
+                  <p className="truncate text-xs text-slate-400">
+                    {a.email_undangan}
+                  </p>
+                </div>
+
+                <div className="flex shrink-0 items-center gap-2">
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-black ${
+                      a.status === 'AKTIF'
+                        ? 'bg-berhasil-600 text-white'
+                        : a.status === 'DIUNDANG'
+                          ? 'bg-peringatan-400 text-slate-900'
+                          : 'bg-slate-200 text-slate-700'
+                    }`}
+                  >
+                    {a.status === 'DIUNDANG' ? 'Diundang' : a.status === 'AKTIF' ? 'Aktif' : 'Nonaktif'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSunting(sunting === a.id ? null : a.id)}
+                    className="rounded-full bg-slate-100 px-4 py-1.5 text-xs font-black text-slate-700"
+                  >
+                    {sunting === a.id ? 'Tutup' : 'Ubah'}
+                  </button>
+                </div>
+              </div>
+
+              {!a.sudah_masuk && a.status === 'DIUNDANG' && (
+                <p className="mt-2 text-xs leading-relaxed text-slate-500">
+                  Belum pernah masuk. Dia jadi alumni otomatis begitu masuk
+                  dengan akun Google di email ini.
+                </p>
+              )}
+
+              {sunting === a.id && (
+                <SuntingAlumni
+                  alumni={a}
+                  kampus={kampus}
+                  jurusan={jurusan}
+                  selesai={() => {
+                    setSunting(null);
+                    selesai();
+                  }}
+                />
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+
+function SuntingAlumni({
+  alumni,
+  kampus,
+  jurusan,
+  selesai,
+}: {
+  alumni: Alumni;
+  kampus: Kampus[];
+  jurusan: Jurusan[];
+  selesai: () => void;
+}) {
+  const [univ, setUniv] = useState(String(alumni.kampus?.id ?? ''));
+  const [major, setMajor] = useState(String(alumni.jurusan?.id ?? ''));
+  const [angkatan, setAngkatan] = useState(String(alumni.angkatan ?? ''));
+  const [kontak, setKontak] = useState(alumni.kontak ?? '');
+  const [status, setStatus] = useState(alumni.status);
+  const [sibuk, setSibuk] = useState(false);
+  const [gagal, setGagal] = useState<string | null>(null);
+  const [berhasil, setBerhasil] = useState(false);
+
+  async function simpan() {
+    setSibuk(true);
+    setGagal(null);
+    setBerhasil(false);
+    try {
+      await api.patch(`/representatives/admin/${alumni.id}`, {
+        ...(univ ? { university_id: Number(univ) } : {}),
+        ...(major ? { major_id: Number(major) } : {}),
+        angkatan: angkatan ? Number(angkatan) : null,
+        kontak: kontak.trim() || null,
+        status,
+      });
+      setBerhasil(true);
+      selesai();
+    } catch (e) {
+      setGagal(pesanDari(e));
+    } finally {
+      setSibuk(false);
+    }
+  }
+
+  return (
+    <div className="mt-3 space-y-3 rounded-2xl bg-slate-50 p-4">
+      {gagal && <PesanError pesan={gagal} />}
+      {berhasil && !gagal && (
+        <p className="text-sm font-bold text-berhasil-700">Tersimpan.</p>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <select
+          value={univ}
+          onChange={(e) => setUniv(e.target.value)}
+          aria-label="Kampus"
+          className="isian outline-none focus:ring-2 focus:ring-merek-magenta/40"
+        >
+          <option value="">Pilih kampus</option>
+          {kampus.map((k) => (
+            <option key={k.id} value={k.id}>
+              {k.singkatan} &middot; {k.nama}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={major}
+          onChange={(e) => setMajor(e.target.value)}
+          aria-label="Jurusan"
+          className="isian outline-none focus:ring-2 focus:ring-merek-magenta/40"
+        >
+          <option value="">Pilih jurusan</option>
+          {jurusan.map((j) => (
+            <option key={j.id} value={j.id}>
+              {j.nama}
+            </option>
+          ))}
+        </select>
+
+        <input
+          type="number"
+          min={1990}
+          max={2100}
+          value={angkatan}
+          onChange={(e) => setAngkatan(e.target.value)}
+          placeholder="Angkatan"
+          aria-label="Angkatan"
+          className="isian outline-none focus:ring-2 focus:ring-merek-magenta/40"
+        />
+
+        <input
+          value={kontak}
+          maxLength={40}
+          onChange={(e) => setKontak(e.target.value)}
+          placeholder="Kontak"
+          aria-label="Kontak"
+          className="isian outline-none focus:ring-2 focus:ring-merek-magenta/40"
+        />
+      </div>
+
+      <div>
+        <p className="text-sm font-black">Status kehadiran</p>
+        <div className="mt-1.5 flex flex-wrap gap-2">
+          {(['DIUNDANG', 'AKTIF', 'NONAKTIF'] as const).map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setStatus(s)}
+              className={`rounded-full px-4 py-2 text-xs font-black ${
+                status === s ? 'tombol-utama' : 'bg-white text-slate-700 ring-1 ring-slate-300'
+              }`}
+            >
+              {s === 'DIUNDANG' ? 'Diundang' : s === 'AKTIF' ? 'Aktif' : 'Nonaktif'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <p className="text-xs leading-relaxed text-slate-500">
+        Email undangan tidak bisa diubah dari sini. Email itu kunci pencocokan
+        saat alumni pertama kali masuk; menggantinya sesudah akunnya tersambung
+        akan memutus hubungan itu tanpa pesan error apa pun.
+      </p>
+
+      <button
+        type="button"
+        disabled={sibuk}
+        onClick={() => void simpan()}
+        className="tombol-utama w-full px-6 py-3 text-sm disabled:opacity-50"
+      >
+        {sibuk ? 'Menyimpan...' : 'Simpan Perubahan'}
+      </button>
+    </div>
   );
 }

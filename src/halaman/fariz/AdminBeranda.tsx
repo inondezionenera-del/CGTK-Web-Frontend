@@ -55,6 +55,7 @@ interface Alat {
 
 const ALAT: Alat[] = [
   { ke: '/admin/pengaturan', nama: 'Pengaturan', ket: 'Harga, batas akhir, link pembayaran, Mode Hemat.', izin: ['ATUR_PEMBAYARAN', 'PENGATURAN_SISTEM', 'ATUR_XP', 'KELOLA_FORM', 'KELOLA_JADWAL'] },
+  { ke: '/admin/pendaftaran', nama: 'Pendaftaran & Pembayaran', ket: 'Siapa yang sudah membayar dan siapa yang belum.', izin: ['TANDAI_LUNAS'] },
   { ke: '/admin/lunas', nama: 'Tandai Lunas', ket: 'Centang peserta yang sudah membayar.', izin: ['TANDAI_LUNAS'] },
   { ke: '/admin/jadwal', nama: 'Saklar Sesi', ket: 'Buka dan tutup sesi. Scanner ikut terkunci.', izin: ['SAKLAR_SESI', 'KELOLA_JADWAL'] },
   { ke: '/admin/alumni', nama: 'Undang Alumni', ket: 'Tanpa alumni, booth kampus tidak punya penjaga.', izin: ['UNDANG_ALUMNI'] },

@@ -41,6 +41,7 @@ const Peringkat = lazy(() => import('./halaman/haqi/Peringkat'));
 const MisiHalaman = lazy(() => import('./halaman/haqi/Misi'));
 const Kuis = lazy(() => import('./halaman/haqi/Kuis'));
 const Kosmetik = lazy(() => import('./halaman/haqi/Kosmetik'));
+const Profil = lazy(() => import('./halaman/fariz/Profil'));
 const PosterBooth = lazy(() => import('./halaman/rijal/PosterBooth'));
 
 // ---------------- PANEL PANITIA ----------------
@@ -60,6 +61,7 @@ const AdminMaster = lazy(() => import('./halaman/rijal/AdminMaster'));
 const AdminEkspor = lazy(() => import('./halaman/rijal/AdminEkspor'));
 const AdminLO = lazy(() => import('./halaman/rijal/AdminLO'));
 const AdminForm = lazy(() => import('./halaman/fariz/AdminForm'));
+const AdminPendaftaran = lazy(() => import('./halaman/fariz/AdminPendaftaran'));
 
 
 // ---------------- ALUMNI ----------------
@@ -113,6 +115,7 @@ export default function App() {
 
         <Route path="/admin" element={<WajibLogin><AdminBeranda /></WajibLogin>} />
         <Route path="/admin/lunas" element={<WajibLogin><AdminLunas /></WajibLogin>} />
+        <Route path="/admin/pendaftaran" element={<WajibLogin><AdminPendaftaran /></WajibLogin>} />
         <Route path="/admin/pengaturan" element={<WajibLogin><AdminPengaturan /></WajibLogin>} />
         <Route path="/admin/pengumuman" element={<WajibLogin><AdminPengumuman /></WajibLogin>} />
         <Route path="/admin/halaman" element={<WajibLogin><AdminHalaman /></WajibLogin>} />
@@ -128,6 +131,7 @@ export default function App() {
         <Route path="/quiz" element={<WajibLogin><Kuis /></WajibLogin>} />
         <Route path="/passport" element={<WajibLogin><Paspor /></WajibLogin>} />
         <Route path="/kosmetik" element={<WajibLogin><Kosmetik /></WajibLogin>} />
+        <Route path="/profil" element={<WajibLogin><Profil /></WajibLogin>} />
         <Route path="/leaderboard" element={<WajibLogin><Peringkat /></WajibLogin>} />
         <Route path="/missions" element={<WajibLogin><MisiHalaman /></WajibLogin>} />
         <Route path="/scan-booth" element={<WajibLogin><ScannerBooth /></WajibLogin>} />

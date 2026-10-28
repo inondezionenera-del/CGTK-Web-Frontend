@@ -117,6 +117,25 @@ export default function Dashboard() {
           level={ps?.level ?? null}
           berikutnya={ps?.level_berikutnya ?? null}
         />
+
+        {/* Profil SELALU terbuka, tidak ikut terkunci sampai lunas.
+            Yang belum membayar justru paling mungkin perlu memperbaiki data
+            yang salah ketik, dan mengunci halaman itu membuat dia tidak bisa
+            melengkapi syarat yang menghalanginya membayar. */}
+        <Link
+          to="/profil"
+          className="mt-4 flex items-center justify-between rounded-2xl bg-slate-100 px-4 py-3"
+        >
+          <span>
+            <span className="block text-sm font-black">Profil Saya</span>
+            <span className="block text-xs text-slate-500">
+              Lihat dan perbaiki data pendaftaranmu
+            </span>
+          </span>
+          <span aria-hidden className="text-2xl text-slate-400">
+            &rsaquo;
+          </span>
+        </Link>
       </header>
 
       {lunas && data?.qr ? (

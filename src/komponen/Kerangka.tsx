@@ -83,6 +83,7 @@ const SEMUA: Kelompok[] = [
     judul: 'Peserta',
     isi: [
       { ke: '/dashboard', label: 'Dashboard & QR', peran: ['PESERTA'] },
+      { ke: '/profil', label: 'Profil Saya', peran: ['PESERTA'] },
       { ke: '/passport', label: 'Paspor Booth', peran: ['PESERTA'] },
       { ke: '/quiz', label: 'Kuis Minat & Bakat', peran: ['PESERTA'] },
       { ke: '/missions', label: 'Misi & Badge', peran: ['PESERTA'] },
@@ -117,6 +118,7 @@ const SEMUA: Kelompok[] = [
     judul: 'Panitia',
     isi: [
       { ke: '/admin', label: 'Dashboard Panitia', izin: IZIN_PANITIA },
+      { ke: '/admin/pendaftaran', label: 'Pendaftaran & Pembayaran', izin: ['TANDAI_LUNAS'] },
       { ke: '/admin/lunas', label: 'Tandai Lunas', izin: ['TANDAI_LUNAS'] },
       { ke: '/admin/jadwal', label: 'Saklar Sesi', izin: ['SAKLAR_SESI', 'KELOLA_JADWAL'] },
       { ke: '/admin/booth', label: 'Kelola Booth', izin: ['KELOLA_BOOTH'] },
