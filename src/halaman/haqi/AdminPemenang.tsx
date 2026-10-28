@@ -32,6 +32,14 @@ interface Pemenang {
   total_xp: number;
 }
 
+interface Kewajaran {
+  rata_rata_xp: number | null;
+  peserta_mencurigakan: Record<string, unknown>[];
+  alumni_mencurigakan: Record<string, unknown>[];
+  xp_di_luar_jam: Record<string, unknown>[];
+  catatan: string;
+}
+
 interface Status {
   beku: boolean;
   dibekukan_at: string | null;
@@ -43,10 +51,20 @@ interface Status {
 }
 
 export default function AdminPemenang() {
-  const { data, memuat, error, muatUlang } = useMuat<Status>(
-    (signal) => api.get<Status>('/leaderboard/admin/status', { signal }),
-    [],
-  );
+  const { data, memuat, error, muatUlang } = useMuat<{
+    status: Status;
+    kewajaran: Kewajaran | null;
+  }>(async (signal) => {
+    const status = await api.get<Status>('/leaderboard/admin/status', { signal });
+
+    // Boleh gagal sendiri: pemeriksaan kewajaran cuma untuk Super Admin, dan
+    // Divisi Acara yang membekukan papan tetap harus bisa membuka halaman ini.
+    const kewajaran = await api
+      .get<Kewajaran>('/points/admin/kewajaran', { signal })
+      .catch(() => null);
+
+    return { status, kewajaran };
+  }, []);
 
   const [jumlah, setJumlah] = useState(3);
   const [catatan, setCatatan] = useState('');
@@ -57,6 +75,9 @@ export default function AdminPemenang() {
   if (memuat) return <Memuat />;
   if (error) return <PesanError pesan={error} coba={() => muatUlang(false)} />;
   if (!data) return null;
+
+  const status = data.status;
+  const kewajaran = data.kewajaran;
 
   async function jalankan(apa: 'bekukan' | 'sahkan') {
     setSibuk(true);
@@ -95,26 +116,95 @@ export default function AdminPemenang() {
           tidak punya waktu menerjemahkan lencana berwarna. */}
       <section className="kartu p-5 ring-1 ring-slate-200">
         <p className="font-black">
-          {!data.beku
+          {!status.beku
             ? 'Papan peringkat masih bergerak'
-            : data.disahkan
+            : status.disahkan
               ? 'Pemenang sudah disahkan'
               : 'Sudah dibekukan, belum disahkan'}
         </p>
         <p className="mt-1 text-sm leading-relaxed text-slate-600">
-          {!data.beku
+          {!status.beku
             ? 'Setiap scan yang masuk masih bisa mengubah urutannya.'
-            : data.disahkan
-              ? `Disahkan ${waktu(data.disahkan_at)}. Kosmetik lima belas besar sudah dibagikan.`
-              : `Dibekukan ${waktu(data.dibekukan_at)}. Urutan tidak berubah lagi walaupun XP terus masuk.`}
+            : status.disahkan
+              ? `Disahkan ${waktu(status.disahkan_at)}. Kosmetik lima belas besar sudah dibagikan.`
+              : `Dibekukan ${waktu(status.dibekukan_at)}. Urutan tidak berubah lagi walaupun XP terus masuk.`}
         </p>
-        {data.catatan && (
-          <p className="mt-2 text-sm italic text-slate-500">{data.catatan}</p>
+        {status.catatan && (
+          <p className="mt-2 text-sm italic text-slate-500">{status.catatan}</p>
         )}
       </section>
 
+      {/* ------------------------------------------------------------------
+          Pemeriksaan kewajaran XP, ditaruh SEBELUM tombol bekukan dengan
+          sengaja. Ini satu-satunya kesempatan memeriksanya: sesudah dibekukan
+          urutannya tidak bisa diubah lagi, dan sesudah disahkan namanya sudah
+          diumumkan.
+
+          Daftar ini MENANDAI, tidak menuduh. XP tinggi bisa berarti peserta
+          yang memang rajin keliling. Panitia yang memutuskan, dan karena itu
+          tidak ada tombol apa pun di sini.
+      ------------------------------------------------------------------ */}
+      {kewajaran && (
+        <section className="kartu p-5 ring-1 ring-slate-200">
+          <h2 className="text-xs font-black uppercase tracking-wider text-slate-400">
+            Pemeriksaan Kewajaran XP
+          </h2>
+
+          {(() => {
+            const total =
+              (kewajaran.peserta_mencurigakan?.length ?? 0) +
+              (kewajaran.alumni_mencurigakan?.length ?? 0) +
+              (kewajaran.xp_di_luar_jam?.length ?? 0);
+
+            if (total === 0) {
+              return (
+                <p className="mt-2 text-sm font-bold text-berhasil-700">
+                  Tidak ada yang janggal.
+                  {kewajaran.rata_rata_xp !== null && (
+                    <span className="ml-1 font-normal text-slate-500">
+                      Rata-rata {kewajaran.rata_rata_xp} XP per peserta.
+                    </span>
+                  )}
+                </p>
+              );
+            }
+
+            return (
+              <>
+                <p className="mt-2 text-sm font-black text-hatihati-700">
+                  {total} hal ditandai untuk diperiksa
+                </p>
+                <ul className="mt-2 space-y-1 text-sm text-slate-700">
+                  {(kewajaran.peserta_mencurigakan?.length ?? 0) > 0 && (
+                    <li>
+                      {kewajaran.peserta_mencurigakan.length} peserta dengan XP
+                      jauh di atas rata-rata
+                    </li>
+                  )}
+                  {(kewajaran.alumni_mencurigakan?.length ?? 0) > 0 && (
+                    <li>
+                      {kewajaran.alumni_mencurigakan.length} alumni memberi XP
+                      jauh lebih banyak dari yang lain
+                    </li>
+                  )}
+                  {(kewajaran.xp_di_luar_jam?.length ?? 0) > 0 && (
+                    <li>
+                      {kewajaran.xp_di_luar_jam.length} pemberian XP di luar jam
+                      acara
+                    </li>
+                  )}
+                </ul>
+                <p className="mt-2 text-xs leading-relaxed text-slate-500">
+                  {kewajaran.catatan}
+                </p>
+              </>
+            );
+          })()}
+        </section>
+      )}
+
       {/* Langkah 1 */}
-      {!data.beku && (
+      {!status.beku && (
         <section className="kartu space-y-4 p-5 ring-2 ring-merek-magenta">
           <div>
             <label htmlFor="jumlah" className="text-sm font-black">
@@ -168,19 +258,19 @@ export default function AdminPemenang() {
       )}
 
       {/* Daftar pemenang dari snapshot */}
-      {data.beku && (
+      {status.beku && (
         <section className="kartu p-5 ring-1 ring-slate-200">
           <h2 className="text-xs font-black uppercase tracking-wider text-slate-400">
             Calon Pemenang
           </h2>
-          {data.pemenang.length === 0 ? (
+          {status.pemenang.length === 0 ? (
             <p className="mt-2 text-sm text-slate-500">
               Snapshot-nya kosong. Belum ada peserta lunas yang mengumpulkan XP
               waktu papan dibekukan.
             </p>
           ) : (
             <ol className="mt-3 space-y-2">
-              {data.pemenang.map((p) => (
+              {status.pemenang.map((p) => (
                 <li
                   key={p.participant_id}
                   className="flex items-center gap-3 rounded-full bg-[#f6e6c3] py-2 pl-2 pr-5"
@@ -202,7 +292,7 @@ export default function AdminPemenang() {
       )}
 
       {/* Langkah 2 */}
-      {data.beku && !data.disahkan && (
+      {status.beku && !status.disahkan && (
         <section className="kartu space-y-4 p-5 ring-2 ring-merek-magenta">
           <div>
             <label htmlFor="catatan" className="text-sm font-black">
@@ -221,7 +311,7 @@ export default function AdminPemenang() {
           {minta === 'sahkan' ? (
             <div className="rounded-2xl bg-slate-100 p-4">
               <p className="text-sm font-bold leading-relaxed">
-                Sahkan {data.pemenang.length} pemenang di atas? Pastikan
+                Sahkan {status.pemenang.length} pemenang di atas? Pastikan
                 namanya sudah kamu baca. Pengesahan tercatat di log dan tidak
                 bisa diulang.
               </p>

@@ -316,6 +316,7 @@ const FITUR = [
   { ke: '/passport', nama: 'Paspor Kampus', ket: 'Kumpulkan booth yang kamu datangi' },
   { ke: '/missions', nama: 'Misi & Badge', ket: 'Kumpulkan XP' },
   { ke: '/leaderboard', nama: 'Papan Peringkat', ket: 'Lihat posisimu' },
+  { ke: '/kosmetik', nama: 'Kosmetik', ket: 'Warna nama, bingkai, latar paspor' },
 ];
 
 function FiturTerkunci({ lunas }: { lunas: boolean }) {

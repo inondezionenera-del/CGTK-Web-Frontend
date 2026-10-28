@@ -39,6 +39,7 @@ const Paspor = lazy(() => import('./halaman/haqi/Paspor'));
 const Peringkat = lazy(() => import('./halaman/haqi/Peringkat'));
 const MisiHalaman = lazy(() => import('./halaman/haqi/Misi'));
 const Kuis = lazy(() => import('./halaman/haqi/Kuis'));
+const Kosmetik = lazy(() => import('./halaman/haqi/Kosmetik'));
 const PosterBooth = lazy(() => import('./halaman/rijal/PosterBooth'));
 
 // ---------------- PANEL PANITIA ----------------
@@ -117,6 +118,7 @@ export default function App() {
         {/* ---------------- HAQI ---------------- */}
         <Route path="/quiz" element={<WajibLogin><Kuis /></WajibLogin>} />
         <Route path="/passport" element={<WajibLogin><Paspor /></WajibLogin>} />
+        <Route path="/kosmetik" element={<WajibLogin><Kosmetik /></WajibLogin>} />
         <Route path="/leaderboard" element={<WajibLogin><Peringkat /></WajibLogin>} />
         <Route path="/missions" element={<WajibLogin><MisiHalaman /></WajibLogin>} />
         <Route path="/scan-booth" element={<WajibLogin><ScannerBooth /></WajibLogin>} />
