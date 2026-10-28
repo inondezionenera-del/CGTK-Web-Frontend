@@ -150,6 +150,45 @@ export const api = {
 };
 
 /** Ubah error apa pun jadi kalimat yang boleh dilihat peserta. */
+/**
+ * Mengunduh berkas dari endpoint yang butuh login.
+ *
+ * Tidak bisa memakai <a href> biasa: ekspor CSV ada di balik Authorization,
+ * dan tautan biasa tidak membawa header apa pun, jadi yang terunduh justru
+ * halaman error 401. Jadi berkasnya diambil dengan fetch lalu disodorkan ke
+ * browser sebagai blob.
+ *
+ * URL blob-nya dicabut sesudah dipakai. Tanpa itu isinya menggantung di memori
+ * tab sampai halamannya ditutup, dan ekspor peserta bukan berkas kecil.
+ */
+export async function unduh(alamat: string, namaBerkas: string): Promise<void> {
+  const token = await ambilToken();
+  const r = await fetch(`${DASAR}${alamat}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+
+  if (!r.ok) {
+    let pesan = `Gagal mengunduh (${r.status})`;
+    try {
+      const j = (await r.json()) as { error?: { pesan?: string } };
+      if (j.error?.pesan) pesan = j.error.pesan;
+    } catch {
+      /* jawaban bukan JSON, pakai pesan bawaan */
+    }
+    throw new KesalahanApi('ERROR_SERVER', pesan, r.status);
+  }
+
+  const blob = await r.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = namaBerkas;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 export function pesanDari(e: unknown): string {
   if (e instanceof KesalahanApi) return e.pesan;
   if (e instanceof Error) return e.message;

@@ -62,6 +62,31 @@ const ALAT: Alat[] = [
     izin: ['KELOLA_KONTEN'],
   },
   {
+    ke: '/admin/alumni',
+    nama: 'Undang Alumni',
+    ket: 'Tanpa alumni, booth kampus tidak punya penjaga.',
+    izin: ['UNDANG_ALUMNI'],
+    penting: true,
+  },
+  {
+    ke: '/admin/booth',
+    nama: 'Kelola Booth',
+    ket: 'Buat booth dari alumni yang sudah diundang, lalu buka.',
+    izin: ['KELOLA_BOOTH'],
+  },
+  {
+    ke: '/admin/kampus',
+    nama: 'Kampus & Jurusan',
+    ket: 'Data induk. Dipakai kuis, booth, dan undangan alumni.',
+    izin: ['KELOLA_MASTER'],
+  },
+  {
+    ke: '/admin/ekspor',
+    nama: 'Ekspor & Log',
+    ket: 'Unduh CSV peserta dan presensi, baca log perubahan.',
+    izin: ['EKSPOR_LPJ', 'LIHAT_AUDIT'],
+  },
+  {
     ke: '/admin/sponsor',
     nama: 'Kelola Sponsor',
     ket: 'Logo, tier, urutan, dan di halaman mana muncul.',

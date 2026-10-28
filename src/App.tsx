@@ -23,16 +23,8 @@ import Jadwal from './halaman/rijal/Jadwal';
 import Pengumuman from './halaman/rijal/Pengumuman';
 import { DaftarBooth, DetailBooth } from './halaman/rijal/Booth';
 import DetailKampus from './halaman/rijal/DetailKampus';
-import AdminSponsor from './halaman/rijal/AdminSponsor';
 import { DashboardLO, StatistikLO } from './halaman/rijal/LO';
 import Kampus from './halaman/rijal/Kampus';
-import AdminSaklar from './halaman/rijal/AdminSaklar';
-import AdminLunas from './halaman/fariz/AdminLunas';
-import AdminPengaturan from './halaman/fariz/AdminPengaturan';
-import AdminBeranda from './halaman/fariz/AdminBeranda';
-import AdminPengumuman from './halaman/rijal/AdminPengumuman';
-import AdminHalaman from './halaman/rijal/AdminHalaman';
-import AdminPemenang from './halaman/haqi/AdminPemenang';
 import Masuk from './halaman/fariz/Masuk';
 import Daftar from './halaman/fariz/Daftar';
 import Bayar from './halaman/fariz/Bayar';
@@ -48,6 +40,23 @@ const Peringkat = lazy(() => import('./halaman/haqi/Peringkat'));
 const MisiHalaman = lazy(() => import('./halaman/haqi/Misi'));
 const Kuis = lazy(() => import('./halaman/haqi/Kuis'));
 const PosterBooth = lazy(() => import('./halaman/rijal/PosterBooth'));
+
+// ---------------- PANEL PANITIA ----------------
+// Dimuat saat dibuka. Yang membukanya belasan panitia; lima ratus peserta
+// tidak perlu ikut mengunduh dua belas layar admin lewat sinyal lapangan.
+const AdminSponsor = lazy(() => import('./halaman/rijal/AdminSponsor'));
+const AdminSaklar = lazy(() => import('./halaman/rijal/AdminSaklar'));
+const AdminLunas = lazy(() => import('./halaman/fariz/AdminLunas'));
+const AdminPengaturan = lazy(() => import('./halaman/fariz/AdminPengaturan'));
+const AdminBeranda = lazy(() => import('./halaman/fariz/AdminBeranda'));
+const AdminPengumuman = lazy(() => import('./halaman/rijal/AdminPengumuman'));
+const AdminHalaman = lazy(() => import('./halaman/rijal/AdminHalaman'));
+const AdminPemenang = lazy(() => import('./halaman/haqi/AdminPemenang'));
+const AdminAlumni = lazy(() => import('./halaman/rijal/AdminAlumni'));
+const AdminBooth = lazy(() => import('./halaman/rijal/AdminBooth'));
+const AdminMaster = lazy(() => import('./halaman/rijal/AdminMaster'));
+const AdminEkspor = lazy(() => import('./halaman/rijal/AdminEkspor'));
+
 
 // ---------------- ALUMNI ----------------
 // Dimuat saat dibuka: yang membukanya cuma belasan orang, dan tidak ada
@@ -96,6 +105,10 @@ export default function App() {
         <Route path="/admin/pengumuman" element={<WajibLogin><AdminPengumuman /></WajibLogin>} />
         <Route path="/admin/halaman" element={<WajibLogin><AdminHalaman /></WajibLogin>} />
         <Route path="/admin/pemenang" element={<WajibLogin><AdminPemenang /></WajibLogin>} />
+        <Route path="/admin/alumni" element={<WajibLogin><AdminAlumni /></WajibLogin>} />
+        <Route path="/admin/booth" element={<WajibLogin><AdminBooth /></WajibLogin>} />
+        <Route path="/admin/kampus" element={<WajibLogin><AdminMaster /></WajibLogin>} />
+        <Route path="/admin/ekspor" element={<WajibLogin><AdminEkspor /></WajibLogin>} />
 
         {/* ---------------- HAQI ---------------- */}
         <Route path="/quiz" element={<WajibLogin><Kuis /></WajibLogin>} />
