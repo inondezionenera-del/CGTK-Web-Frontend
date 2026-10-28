@@ -63,7 +63,18 @@ export interface Acara {
 
 export interface Sesi {
   id: number;
-  event_id: number;
+  /**
+   * Acara induk sesi ini.
+   *
+   * Dua bentuk sekaligus, dan itu disengaja. Server mengirim event_id dan juga
+   * menyertakan acaranya sebagai objek `events` karena halaman lain butuh
+   * namanya. Pernah terjadi event_id tidak ikut di-select sementara tipe ini
+   * tetap menjanjikannya, dan halaman Jadwal lalu kosong di semua acara tanpa
+   * satu pun pesan galat. Dibuat opsional supaya TypeScript memaksa pemakainya
+   * menyiapkan cadangan.
+   */
+  event_id?: number;
+  events?: { id: number; nama: string; tipe: string; tanggal: string | null };
   nama: string;
   lokasi: string | null;
   jam_mulai: string | null;

@@ -12,6 +12,7 @@
 ============================================================================= */
 
 import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 
 export function Memuat({ pesan = 'Memuat...' }: { pesan?: string }) {
   return (
@@ -67,6 +68,56 @@ export function Kosong({ judul, keterangan }: { judul: string; keterangan?: Reac
       {keterangan && (
         <p className="mt-1 text-sm leading-relaxed text-slate-500">{keterangan}</p>
       )}
+    </div>
+  );
+}
+
+/**
+ * Fitur yang belum terbuka, bukan kesalahan.
+ *
+ * Bedanya dengan PesanError bukan soal warna. Kartu merah dengan tombol
+ * "Coba lagi" menyuruh orang mengulang sesuatu yang tidak akan pernah
+ * berhasil: mengklik ulang tidak membuat pembayarannya masuk. Yang dia
+ * butuhkan adalah tahu langkah berikutnya dan tombol yang membawanya ke sana.
+ */
+export function Terkunci({
+  judul,
+  keterangan,
+  ke,
+  labelTombol,
+}: {
+  judul: string;
+  keterangan: ReactNode;
+  ke?: string;
+  labelTombol?: string;
+}) {
+  return (
+    <div className="mx-auto max-w-md px-4 py-10 text-center">
+      <div className="kartu px-6 py-9 ring-1 ring-slate-200">
+        <svg
+          viewBox="0 0 24 24"
+          className="mx-auto h-12 w-12 text-slate-300"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.8}
+          aria-hidden="true"
+        >
+          <rect x="4" y="10.5" width="16" height="10" rx="2.5" />
+          <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
+        </svg>
+
+        <h1 className="judul-tebal mt-4 text-xl text-slate-900">{judul}</h1>
+        <p className="mt-2 text-sm leading-relaxed text-slate-600">{keterangan}</p>
+
+        {ke && (
+          <Link
+            to={ke}
+            className="tombol-utama mt-6 inline-flex items-center justify-center px-7 py-3 text-sm"
+          >
+            {labelTombol ?? 'Lanjutkan'}
+          </Link>
+        )}
+      </div>
     </div>
   );
 }

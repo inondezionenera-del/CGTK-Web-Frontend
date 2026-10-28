@@ -95,7 +95,10 @@ export default function Jadwal() {
       ) : (
         acaraHari.map((a) => {
           const sesiAcara = (data?.sesi ?? [])
-            .filter((s) => s.event_id === a.id && s.status !== 'DRAFT')
+            // Dibaca dari dua tempat dengan sengaja: pernah terjadi
+            // event_id tidak ikut dikirim server dan seluruh halaman ini
+            // tampil kosong tanpa satu pun pesan galat.
+            .filter((s) => (s.event_id ?? s.events?.id) === a.id && s.status !== 'DRAFT')
             .sort((x, y) => x.urutan - y.urutan);
 
           return (

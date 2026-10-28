@@ -3,12 +3,21 @@
 ============================================================================= */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { pesanDari } from './api';
+import { KesalahanApi, pesanDari } from './api';
 
 interface Keadaan<T> {
   data: T | null;
   memuat: boolean;
   error: string | null;
+  /**
+   * Kode galat dari server, mis. BELUM_BAYAR.
+   *
+   * Dulu kait ini cuma menyimpan kalimatnya. Akibatnya halaman tidak bisa
+   * membedakan "server rusak" dari "fitur ini memang belum terbuka untukmu",
+   * dan keduanya tampil sebagai kartu merah dengan tombol Coba Lagi. Peserta
+   * yang belum bayar jadi melihat Paspor seolah aplikasinya error.
+   */
+  kode: string | null;
 }
 
 /**
@@ -27,19 +36,27 @@ export function useMuat<T>(
     data: null,
     memuat: true,
     error: null,
+    kode: null,
   });
 
   const ambilRef = useRef(ambil);
   ambilRef.current = ambil;
 
   const jalankan = useCallback(async (signal: AbortSignal, diamDiam = false) => {
-    if (!diamDiam) setKeadaan((s) => ({ ...s, memuat: true, error: null }));
+    if (!diamDiam) setKeadaan((s) => ({ ...s, memuat: true, error: null, kode: null }));
     try {
       const hasil = await ambilRef.current(signal);
-      if (!signal.aborted) setKeadaan({ data: hasil, memuat: false, error: null });
+      if (!signal.aborted) {
+        setKeadaan({ data: hasil, memuat: false, error: null, kode: null });
+      }
     } catch (e) {
       if (signal.aborted || (e as Error)?.name === 'AbortError') return;
-      setKeadaan({ data: null, memuat: false, error: pesanDari(e) });
+      setKeadaan({
+        data: null,
+        memuat: false,
+        error: pesanDari(e),
+        kode: e instanceof KesalahanApi ? e.kode : null,
+      });
     }
   }, []);
 

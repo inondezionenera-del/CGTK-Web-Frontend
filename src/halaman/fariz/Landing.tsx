@@ -200,7 +200,7 @@ export default function Landing() {
                   </span>
                   <h3 className="mt-2 font-bold">{a.nama}</h3>
                   {a.tanggal && (
-                    <p className="mt-0.5 text-xs text-slate-500">{a.tanggal}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">{tanggalPanjang(a.tanggal)}</p>
                   )}
                 </li>
               ))}
@@ -244,4 +244,25 @@ export default function Landing() {
       </div>
     </div>
   );
+}
+
+/**
+ * 2026-10-26 -> 26 Oktober 2026.
+ *
+ * Tanggal mentah ISO muncul apa adanya di halaman depan, dan itu satu-satunya
+ * tempat di seluruh web ini yang terlihat seperti isian database yang lupa
+ * dirapikan. Kalau formatnya tidak terbaca, yang ditampilkan tetap teks
+ * aslinya: lebih baik tanggal jelek daripada tanggal hilang.
+ */
+function tanggalPanjang(iso: string | null): string {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso.length === 10 ? iso + 'T00:00:00' : iso);
+    if (Number.isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString('id-ID', {
+      day: 'numeric', month: 'long', year: 'numeric',
+    });
+  } catch {
+    return iso;
+  }
 }

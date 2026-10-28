@@ -56,6 +56,8 @@ export default function ScannerBooth() {
   const [terakhir, setTerakhir] = useState<ScanTerakhir[]>([]);
   const [bukaBatal, setBukaBatal] = useState(false);
   const [sibuk, setSibuk] = useState(false);
+  const [kamera, setKamera] = useState<'memulai' | 'siap' | 'gagal'>('memulai');
+  const [ulangKamera, setUlangKamera] = useState(0);
 
   const video = useRef<HTMLVideoElement>(null);
   const stream = useRef<MediaStream | null>(null);
@@ -95,6 +97,8 @@ export default function ScannerBooth() {
     const kanvas = document.createElement('canvas');
     const ctx = kanvas.getContext('2d', { willReadFrequently: true });
 
+    setKamera('memulai');
+
     async function nyalakan() {
       try {
         stream.current = await navigator.mediaDevices.getUserMedia({
@@ -102,9 +106,11 @@ export default function ScannerBooth() {
           audio: false,
         });
       } catch {
+        if (!berhenti) setKamera('gagal');
         return;
       }
       if (berhenti || !video.current) return;
+      setKamera('siap');
       video.current.srcObject = stream.current;
       await video.current.play().catch(() => {});
       baca();
@@ -135,7 +141,7 @@ export default function ScannerBooth() {
       stream.current?.getTracks().forEach((t) => t.stop());
       stream.current = null;
     };
-  }, [isiQr]);
+  }, [isiQr, ulangKamera]);
 
   async function beri(jenis: Jenis) {
     if (!isiQr || sibuk) return;
@@ -196,6 +202,34 @@ export default function ScannerBooth() {
       <div className="relative flex flex-1 items-center justify-center overflow-hidden">
         <video ref={video} playsInline muted className="h-full w-full object-cover" />
         <div className="pointer-events-none absolute h-60 w-60 rounded-3xl border-4 border-white/80" />
+
+        {/* Keadaan kamera.
+            Sebelum ini kegagalan getUserMedia ditelan diam-diam: alumni yang
+            menekan "Jangan izinkan", atau yang browsernya memblokir kamera,
+            melihat layar hitam kosong selamanya tanpa satu pun petunjuk.
+            Di tengah antrean booth itu berarti dia menyerah dan pulang. */}
+        {kamera !== 'siap' && (
+          <div className="absolute inset-x-6 top-1/2 -translate-y-1/2 rounded-3xl bg-white/95 p-6 text-center text-slate-900">
+            {kamera === 'memulai' ? (
+              <p className="font-black">Menyalakan kamera...</p>
+            ) : (
+              <>
+                <p className="text-lg font-black">Kamera belum bisa dipakai</p>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                  Browser menolak akses kamera. Ketuk ikon gembok di sebelah
+                  alamat web, izinkan Kamera, lalu coba lagi.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setUlangKamera((n) => n + 1)}
+                  className="tombol-utama mt-5 px-7 py-3 text-sm"
+                >
+                  Coba Nyalakan Lagi
+                </button>
+              </>
+            )}
+          </div>
+        )}
 
         {pesan && (
           <div

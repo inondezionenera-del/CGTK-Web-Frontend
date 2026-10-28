@@ -126,6 +126,8 @@ export default function Scanner() {
   const [sesiTerpilih, setSesiTerpilih] = useState<number | null>(null);
   const [modeCepat, setModeCepat] = useState(true);
   const [hasil, setHasil] = useState<Hasil | null>(null);
+  const [kamera, setKamera] = useState<'memulai' | 'siap' | 'gagal'>('memulai');
+  const [ulangKamera, setUlangKamera] = useState(0);
   const [jumlahHariIni, setJumlahHariIni] = useState(0);
   const [status, setStatus] = useState<StatusAntrean>({ keadaan: 'online', antre: 0 });
   const [kodeManual, setKodeManual] = useState('');
@@ -213,6 +215,7 @@ export default function Scanner() {
     let rafId = 0;
     const kanvas = document.createElement('canvas');
     const ctx = kanvas.getContext('2d', { willReadFrequently: true });
+    setKamera('memulai');
 
     async function nyalakan() {
       try {
@@ -230,10 +233,15 @@ export default function Scanner() {
             audio: false,
           });
         } catch {
+          // Sebelum ini kegagalan kamera ditelan diam-diam dan panitia cuma
+          // melihat persegi hitam. Dia tidak tahu harus mengizinkan kamera,
+          // dan tidak tahu ada jalur ketik kode di bawah.
+          if (!berhenti) setKamera('gagal');
           return;
         }
       }
       if (berhenti || !video.current) return;
+      setKamera('siap');
       video.current.srcObject = stream.current;
       await video.current.play().catch(() => {});
       baca();
@@ -272,7 +280,7 @@ export default function Scanner() {
       stream.current = null;
       if (video.current) video.current.srcObject = null;
     };
-  }, [bolehScan, kirim]);
+  }, [bolehScan, kirim, ulangKamera]);
 
   /* --- layar jangan mati selama scanner terbuka --------------------------- */
   useEffect(() => {
@@ -492,6 +500,30 @@ export default function Scanner() {
               className="h-full w-full object-cover"
             />
             <div className="pointer-events-none absolute h-60 w-60 rounded-3xl border-4 border-white/80" />
+
+            {kamera !== 'siap' && (
+              <div className="absolute inset-x-6 top-1/2 -translate-y-1/2 rounded-3xl bg-white/95 p-6 text-center text-slate-900">
+                {kamera === 'memulai' ? (
+                  <p className="font-black">Menyalakan kamera...</p>
+                ) : (
+                  <>
+                    <p className="text-lg font-black">Kamera belum bisa dipakai</p>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                      Ketuk ikon gembok di sebelah alamat web, izinkan Kamera,
+                      lalu coba lagi. Kalau tetap tidak bisa, pakai tombol
+                      Ketik Kode di bawah.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setUlangKamera((n) => n + 1)}
+                      className="tombol-utama mt-5 px-7 py-3 text-sm"
+                    >
+                      Coba Nyalakan Lagi
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>

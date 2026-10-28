@@ -29,7 +29,7 @@
 import { useMemo, useState } from 'react';
 import { api } from '../../lib/api';
 import { useMuat } from '../../lib/kait';
-import { Memuat, PesanError, Kosong } from '../../komponen/Keadaan';
+import { Memuat, PesanError, Kosong, Terkunci } from '../../komponen/Keadaan';
 
 interface KotakBooth {
   id: number;
@@ -60,7 +60,7 @@ const TAB = [
 ];
 
 export default function Paspor() {
-  const { data, memuat, error, muatUlang } = useMuat<Isi>(
+  const { data, memuat, error, kode, muatUlang } = useMuat<Isi>(
     (signal) => api.get<Isi>('/booths/passport/saya', { signal }),
     [],
   );
@@ -84,6 +84,22 @@ export default function Paspor() {
   }, [semua, cari]);
 
   if (memuat) return <Memuat />;
+
+  // Peserta yang belum lunas bukan sedang mengalami error. Sebelum ini dia
+  // melihat kartu merah "Peserta belum menyelesaikan pembayaran" dengan tombol
+  // Coba Lagi, yang tidak akan pernah berhasil karena yang kurang bukan
+  // permintaannya, melainkan pembayarannya.
+  if (kode === 'BELUM_BAYAR') {
+    return (
+      <Terkunci
+        judul="Paspor terbuka sesudah pembayaran"
+        keterangan="Paspor Kampus dan Paspor Jurusan mulai mengumpulkan stempel begitu panitia menandai pembayaranmu lunas. Kodemu tetap tersimpan, tidak perlu mendaftar ulang."
+        ke="/bayar"
+        labelTombol="Lihat Cara Bayar"
+      />
+    );
+  }
+
   if (error) return <PesanError pesan={error} coba={() => muatUlang(false)} />;
 
   const terkumpul = paspor?.terkumpul ?? semua.filter((b) => b.dikunjungi).length;
