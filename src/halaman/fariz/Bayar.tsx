@@ -41,29 +41,55 @@ export default function Bayar() {
   // --- Keadaan 1: profil belum lengkap -------------------------------------
   if (!data.profil_lengkap) {
     return (
-      <div className="mx-auto max-w-md space-y-5">
-        <div className="rounded-3xl border border-hatihati-600 bg-hatihati-50 p-6 dark:bg-hatihati-700/10">
-          <h1 className="text-xl font-bold">Lengkapi dulu datamu</h1>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-            Panitia Administrasi minta datanya lengkap sebelum pembayaran
-            dibuka, supaya tidak ada yang sudah bayar tapi datanya setengah.
-          </p>
+      <div className="mx-auto max-w-md px-4 py-8">
+        {/* Gambar kartu identitas abu-abu, seperti di mockup. Digambar sebagai
+            SVG, bukan dipotong dari PNG: bentuknya cuma persegi dan lingkaran,
+            dan sebagai SVG dia tetap tajam di layar sepadat apa pun. */}
+        <svg
+          viewBox="0 0 320 180"
+          className="w-full text-slate-300"
+          role="img"
+          aria-label="Kartu identitas belum lengkap"
+        >
+          <rect width="320" height="180" rx="26" fill="currentColor" />
+          <rect x="42" y="26" width="236" height="128" rx="10" fill="white" />
+          <rect x="60" y="44" width="200" height="92" fill="currentColor" />
+          <circle cx="104" cy="76" r="20" fill="white" />
+          <path d="M78 128a26 26 0 0 1 52 0z" fill="white" />
+          <rect x="150" y="60" width="78" height="20" rx="4" fill="white" />
+          <rect x="150" y="96" width="60" height="20" rx="4" fill="white" />
+        </svg>
 
-          {(data.field_belum_diisi?.length ?? 0) > 0 && (
-            <ul className="mt-4 space-y-1 text-sm font-semibold text-hatihati-700">
+        {/* Daftar yang kurang ditulis merah dengan bintang, persis seperti di
+            mockup. Nama kolomnya datang dari server, jadi kalau Administrasi
+            menambah pertanyaan baru, yang kurang ikut muncul sendiri. */}
+        <div className="mt-6">
+          {(data.field_belum_diisi?.length ?? 0) > 0 ? (
+            <ul className="space-y-0.5">
               {data.field_belum_diisi!.map((f) => (
-                <li key={f}>· {f.replace(/_/g, ' ')}</li>
+                <li key={f} className="text-lg font-extrabold text-bahaya-600">
+                  *{f.replace(/_/g, ' ')} belum diisi
+                </li>
               ))}
             </ul>
+          ) : (
+            <p className="text-lg font-extrabold text-bahaya-600">
+              *Datamu belum lengkap
+            </p>
           )}
-
-          <Link
-            to="/daftar"
-            className="mt-5 flex items-center justify-center rounded-2xl bg-utama-600 px-6 py-3 font-bold text-white"
-          >
-            Lengkapi Sekarang
-          </Link>
         </div>
+
+        <p className="mt-3 text-sm text-slate-600">
+          Panitia Administrasi minta datanya lengkap sebelum pembayaran dibuka,
+          supaya tidak ada yang sudah bayar tapi datanya setengah.
+        </p>
+
+        <Link
+          to="/daftar"
+          className="mt-6 flex min-h-16 items-center justify-center rounded-full bg-white text-xl font-black text-slate-900 shadow-[0_6px_0_-1px_rgba(0,0,0,0.25)] ring-1 ring-slate-200"
+        >
+          Lengkapi Profil &gt;
+        </Link>
       </div>
     );
   }

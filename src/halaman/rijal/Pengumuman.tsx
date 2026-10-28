@@ -32,7 +32,7 @@ export default function Pengumuman() {
   return (
     <div className="mx-auto max-w-xl space-y-4 pb-10">
       <header>
-        <h1 className="text-2xl font-bold">Pengumuman</h1>
+        <h1 className="judul-tebal text-[2rem]">Pengumuman</h1>
         <p className="mt-1 text-sm text-slate-500">Yang terbaru di atas.</p>
       </header>
 

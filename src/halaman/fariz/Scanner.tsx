@@ -46,14 +46,35 @@ type Cabang =
   | 'TERLALU_SERING'
   | 'TERSIMPAN_OFFLINE';
 
-const TAMPILAN: Record<Cabang, { latar: string; teks: string; judul: string }> = {
-  BERHASIL:          { latar: 'bg-berhasil-600',   teks: 'text-white',      judul: 'Berhasil' },
-  SUDAH_SCAN:        { latar: 'bg-peringatan-400', teks: 'text-slate-900',  judul: 'Sudah Presensi' },
-  BELUM_BAYAR:       { latar: 'bg-hatihati-600',   teks: 'text-white',      judul: 'Belum Lunas' },
-  SESI_DITUTUP:      { latar: 'bg-bahaya-700',     teks: 'text-white',      judul: 'Sesi Ditutup' },
-  QR_TIDAK_VALID:    { latar: 'bg-bahaya-600',     teks: 'text-white',      judul: 'QR Tidak Dikenali' },
-  TERLALU_SERING:    { latar: 'bg-hatihati-700',   teks: 'text-white',      judul: 'Tunggu Sebentar' },
-  TERSIMPAN_OFFLINE: { latar: 'bg-slate-700',      teks: 'text-white',      judul: 'Tersimpan di HP' },
+/**
+ * Tiap cabang satu layar penuh: warna gradasi dari atas ke putih, maskot
+ * besar, lalu satu kata raksasa. Warnanya diambil langsung dari mockup, bukan
+ * dikira-kira.
+ *
+ * SUDAH_SCAN kuning dan tulisannya gelap, bukan merah dan putih. Dia bukan
+ * kesalahan: dia tanda aturan anti-dobel bekerja. Kalau merah, panitia di
+ * pintu masuk mengira ada masalah lalu berhenti, dan antreannya macet.
+ *
+ * TERSIMPAN_OFFLINE tidak ada di mockup. Dibuat abu-abu gelap supaya jelas
+ * berbeda dari enam yang lain: itu satu-satunya keadaan yang belum selesai,
+ * datanya masih di HP dan belum sampai ke server.
+ */
+interface Tampilan {
+  atas: string;
+  pil: string;
+  teks: string;
+  judul: string;
+  maskot: string | null;
+}
+
+const TAMPILAN: Record<Cabang, Tampilan> = {
+  BERHASIL:          { atas: '#60ff0b', pil: '#49d000', teks: 'text-white',     judul: 'BERHASIL',       maskot: 'berhasil' },
+  SUDAH_SCAN:        { atas: '#fff70b', pil: '#d0d000', teks: 'text-slate-900', judul: 'SUDAH PRESENSI', maskot: 'sudah-presensi' },
+  BELUM_BAYAR:       { atas: '#ff840b', pil: '#d07a00', teks: 'text-white',     judul: 'BELUM BAYAR',    maskot: 'belum-bayar' },
+  SESI_DITUTUP:      { atas: '#ff0b0b', pil: '#d00000', teks: 'text-white',     judul: 'SESI DITUTUP',   maskot: 'sesi-ditutup' },
+  QR_TIDAK_VALID:    { atas: '#ff0b0b', pil: '#d00000', teks: 'text-white',     judul: 'QR TIDAK VALID', maskot: 'qr-tidak-valid' },
+  TERLALU_SERING:    { atas: '#ff850b', pil: '#d07a00', teks: 'text-white',     judul: 'TERLALU SERING', maskot: 'terlalu-sering' },
+  TERSIMPAN_OFFLINE: { atas: '#475569', pil: '#334155', teks: 'text-white',     judul: 'TERSIMPAN DI HP', maskot: null },
 };
 
 /** Satu AudioContext untuk seumur halaman. Lihat catatan di atas. */
@@ -293,7 +314,7 @@ export default function Scanner() {
   if (!sesiTerpilih) {
     return (
       <div className="mx-auto max-w-md space-y-4">
-        <h1 className="text-xl font-bold">Pilih Sesi</h1>
+        <h1 className="judul-tebal text-2xl">Pilih Sesi</h1>
         <p className="text-sm text-slate-500">
           Kamera hanya terbuka untuk sesi yang sedang berjalan.
         </p>
@@ -307,7 +328,7 @@ export default function Scanner() {
               key={s.id}
               type="button"
               onClick={() => setSesiTerpilih(s.id)}
-              className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 text-left dark:border-slate-800 dark:bg-slate-900"
+              className="flex w-full items-center justify-between kartu p-4 text-left"
             >
               <span>
                 <span className="block font-bold">{s.nama}</span>
@@ -379,19 +400,48 @@ export default function Scanner() {
             </p>
           </div>
         ) : t ? (
-          <div className={`flex h-full w-full flex-col items-center justify-center ${t.latar} ${t.teks}`}>
-            <p className="px-6 text-center text-3xl font-black">{t.judul}</p>
+          <div
+            className="flex h-full w-full flex-col items-center justify-center px-5"
+            style={{ background: `linear-gradient(180deg, ${t.atas} 0%, #ffffff 100%)` }}
+          >
+            {t.maskot && (
+              <img
+                src={`/maskot/${t.maskot}.png`}
+                alt=""
+                aria-hidden
+                className="mb-2 max-h-[34vh] w-auto max-w-[72%] object-contain drop-shadow-lg"
+              />
+            )}
+
+            <p className="judul-stiker px-2 text-center text-[13vw] leading-none sm:text-6xl">
+              {t.judul}
+            </p>
+
+            {/* Nama dan asal sekolah jadi dua pil berwarna lebih tua, seperti
+                di mockup. Mockup menulis "Kelompok : Pluto"; tidak ada kolom
+                kelompok di database, jadi yang tampil asal sekolah. */}
             {hasil?.nama && (
-              <p className="mt-3 px-6 text-center text-2xl font-bold">{hasil.nama}</p>
+              <p
+                className={`mt-4 w-full max-w-md truncate rounded-full px-5 py-3 text-center text-xl font-extrabold ${t.teks}`}
+                style={{ background: t.pil }}
+              >
+                {hasil.nama}
+              </p>
             )}
             {hasil?.rincian && (
-              <p className="mt-1 px-6 text-center text-base">{hasil.rincian}</p>
+              <p
+                className={`mt-2 w-full max-w-md truncate rounded-full px-5 py-3 text-center text-lg font-extrabold ${t.teks}`}
+                style={{ background: t.pil }}
+              >
+                {hasil.rincian}
+              </p>
             )}
+
             {!modeCepat && (
               <button
                 type="button"
                 onClick={() => setHasil(null)}
-                className="mt-8 rounded-xl bg-white px-8 font-bold text-slate-900"
+                className="mt-7 w-full max-w-xs rounded-full bg-white px-8 py-3 font-extrabold text-slate-900 shadow-lg"
               >
                 Lanjut
               </button>

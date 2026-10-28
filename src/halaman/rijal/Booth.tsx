@@ -44,7 +44,7 @@ export function DaftarBooth() {
   return (
     <div className="mx-auto max-w-2xl space-y-4 pb-10">
       <header>
-        <h1 className="text-2xl font-bold">Daftar Booth</h1>
+        <h1 className="judul-tebal text-[2rem]">Daftar Booth</h1>
         <p className="mt-1 text-sm text-slate-500">
           Cek kampus atau jurusan apa ada di booth mana.
         </p>
@@ -143,8 +143,8 @@ export function DetailBooth() {
 
   return (
     <div className="mx-auto max-w-xl space-y-5 pb-10">
-      <header className="kartu border border-slate-200 p-5 dark:border-slate-800">
-        <h1 className="text-xl font-bold">{data.booth.nama_tampilan}</h1>
+      <header className="kartu ring-1 ring-slate-200 p-5 dark:border-slate-800">
+        <h1 className="judul-tebal text-2xl">{data.booth.nama_tampilan}</h1>
         <p className="mt-0.5 text-sm text-slate-500">
           {data.booth.lokasi ?? 'Lokasi menyusul'}
         </p>
@@ -168,7 +168,7 @@ export function DetailBooth() {
             {(data.alumni ?? []).map((a) => (
               <li
                 key={a.id}
-                className="kartu border border-slate-200 p-3 dark:border-slate-800"
+                className="kartu ring-1 ring-slate-200 p-3 dark:border-slate-800"
               >
                 <p className="font-bold">{a.nama}</p>
                 {a.kampus && <p className="text-xs text-slate-500">{a.kampus}</p>}

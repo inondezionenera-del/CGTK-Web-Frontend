@@ -78,7 +78,7 @@ export default function CekStatus() {
   return (
     <div className="mx-auto max-w-md space-y-5 pb-10">
       <header>
-        <h1 className="text-2xl font-bold">Cek Status Pendaftaran</h1>
+        <h1 className="judul-tebal text-[2rem]">Cek Status Pendaftaran</h1>
         <p className="mt-1 text-sm text-slate-500">
           Masukkan kode registrasimu. Tidak perlu masuk akun.
         </p>

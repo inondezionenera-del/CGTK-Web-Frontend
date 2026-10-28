@@ -97,7 +97,7 @@ export default function MisiHalaman() {
   return (
     <div className="mx-auto max-w-xl space-y-6 pb-10">
       <header>
-        <h1 className="text-2xl font-bold">Misi & Badge</h1>
+        <h1 className="judul-tebal text-[2rem]">Misi &amp; Badge</h1>
         <p className="mt-1 text-sm text-slate-500">
           Kumpulkan XP dengan mendatangi booth dan ikut sesi.
         </p>
@@ -173,16 +173,25 @@ export default function MisiHalaman() {
             {(data?.badge ?? []).map((b) => (
               <li
                 key={b.id}
-                className={`kartu border p-3 text-center ${
-                  b.didapat
-                    ? 'border-utama-600'
-                    : 'border-slate-200 opacity-60 dark:border-slate-800'
+                className={`kartu p-3 text-center ${
+                  b.didapat ? 'ring-2 ring-merek-magenta' : 'ring-1 ring-slate-200'
                 }`}
                 title={b.deskripsi ?? undefined}
               >
-                <p className="text-2xl" aria-hidden>
-                  {b.didapat ? '★' : '☆'}
-                </p>
+                {/* Lencana segi enam dari Figma. Yang belum didapat memakai
+                    gambar yang sama dalam keadaan abu-abu dan pudar, bukan
+                    gambar lain: bentuk yang sama persis itu yang membuat orang
+                    tahu persis apa yang akan dia dapat kalau syaratnya
+                    dipenuhi. */}
+                <img
+                  src="/lencana/emas.png"
+                  alt=""
+                  aria-hidden
+                  loading="lazy"
+                  className={`mx-auto h-12 w-12 ${
+                    b.didapat ? '' : 'opacity-35 grayscale'
+                  }`}
+                />
                 <p className="mt-1 truncate text-[11px] font-bold">{b.nama}</p>
                 {!b.didapat && b.deskripsi && (
                   <p className="mt-0.5 line-clamp-2 text-[10px] text-slate-400">

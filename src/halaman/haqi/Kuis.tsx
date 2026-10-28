@@ -132,7 +132,7 @@ export default function Kuis() {
   return (
     <div className="mx-auto max-w-xl space-y-5 pb-10">
       <header>
-        <h1 className="text-xl font-bold">Kuis Minat & Bakat</h1>
+        <h1 className="judul-tebal text-2xl">Kuis Minat & Bakat</h1>
         <p className="mt-1 text-sm text-slate-500">
           Soal {nomor + 1} dari {daftar.length}
         </p>
@@ -145,7 +145,7 @@ export default function Kuis() {
       </header>
 
       {sekarang && (
-        <section className="kartu border border-slate-200 p-5 dark:border-slate-800">
+        <section className="kartu ring-1 ring-slate-200 p-5 dark:border-slate-800">
           <p className="font-bold">{sekarang.teks}</p>
           <ul className="mt-4 space-y-2">
             {sekarang.options.map((o) => (
@@ -226,7 +226,7 @@ function HalamanHasil({ hasil }: { hasil: Hasil }) {
         ) : null}
       </header>
 
-      <section className="kartu border border-slate-200 p-5 dark:border-slate-800">
+      <section className="kartu ring-1 ring-slate-200 p-5 dark:border-slate-800">
         <h2 className="text-sm font-bold">Skor per rumpun</h2>
         <ul className="mt-3 space-y-2">
           {Object.entries(hasil.skor ?? {})
@@ -249,7 +249,7 @@ function HalamanHasil({ hasil }: { hasil: Hasil }) {
       </section>
 
       {hasil.hasil_jurusan?.length > 0 && (
-        <section className="kartu border border-slate-200 p-5 dark:border-slate-800">
+        <section className="kartu ring-1 ring-slate-200 p-5 dark:border-slate-800">
           <h2 className="text-sm font-bold">Jurusan yang cocok</h2>
           <ul className="mt-2 space-y-1 text-sm">
             {hasil.hasil_jurusan.map((j) => (
@@ -260,7 +260,7 @@ function HalamanHasil({ hasil }: { hasil: Hasil }) {
       )}
 
       {hasil.hasil_kampus?.length > 0 && (
-        <section className="kartu border border-slate-200 p-5 dark:border-slate-800">
+        <section className="kartu ring-1 ring-slate-200 p-5 dark:border-slate-800">
           <h2 className="text-sm font-bold">Kampus yang cocok</h2>
           <p className="mt-0.5 text-xs text-slate-500">
             Hanya kampus yang benar-benar membuka booth di CGTK.

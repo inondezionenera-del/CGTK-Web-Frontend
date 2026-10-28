@@ -124,6 +124,20 @@ textarea::placeholder {
   background-repeat: repeat-y;
 }
 
+/* Tulisan raksasa di layar hasil scan: putih dengan garis tepi gelap, seperti
+   stiker. Dua lapis sengaja: text-stroke saja hilang di sebagian Android lama,
+   dan text-shadow saja terlalu tipis dibaca dari jarak satu meter di bawah
+   matahari. Dipakai bersama, yang satu jadi cadangan yang lain. */
+@utility judul-stiker {
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  color: white;
+  -webkit-text-stroke: 2px rgb(0 0 0 / 0.28);
+  text-shadow:
+    0 3px 0 rgb(0 0 0 / 0.18),
+    0 6px 14px rgb(0 0 0 / 0.22);
+}
+
 @utility judul-tebal {
   font-weight: 900;
   letter-spacing: -0.02em;

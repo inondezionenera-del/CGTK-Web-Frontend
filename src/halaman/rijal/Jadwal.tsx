@@ -57,10 +57,13 @@ export default function Jadwal() {
 
   return (
     <div className="mx-auto max-w-xl space-y-5 pb-10">
-      <header>
-        <h1 className="text-2xl font-bold">Jadwal CGTK 2027</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Tanda LIVE menyala saat sesinya benar-benar dibuka panitia.
+      <header className="text-center">
+        <h1 className="judul-stiker text-[2.8rem] uppercase leading-none">
+          Timeline
+        </h1>
+        <p className="mt-2 text-sm text-slate-500">
+          Tanda LIVE menyala saat sesinya benar-benar dibuka panitia, bukan
+          saat jamnya tiba.
         </p>
       </header>
 
@@ -106,42 +109,72 @@ export default function Jadwal() {
                   Belum ada sesi yang dibuka di acara ini.
                 </p>
               ) : (
-                <ul className="space-y-2">
+                <ul className="space-y-5">
                   {sesiAcara.map((s) => (
-                    <li
-                      key={s.id}
-                      className={`kartu flex items-center justify-between gap-3 border p-4 ${
-                        s.status === 'ACTIVE'
-                          ? 'border-berhasil-600'
-                          : 'border-slate-200 opacity-70 dark:border-slate-800'
-                      }`}
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate font-bold">{s.nama}</p>
-                        <p className="truncate text-xs text-slate-500">
-                          {jam(s.jam_mulai)}
-                          {s.lokasi ? ` · ${s.lokasi}` : ''}
-                        </p>
-                      </div>
+                    <li key={s.id} className="relative">
+                      {/* Lidah map di pojok kiri atas, seperti di mockup.
+                          Digambar dengan satu kotak membulat di belakang
+                          kartunya, bukan gambar terpisah. */}
+                      <span className="absolute -top-3 left-3 h-7 w-28 rounded-t-2xl bg-white ring-1 ring-merek-navy/25" />
 
-                      <div className="flex shrink-0 items-center gap-2">
-                        {s.saya_sudah_hadir && (
-                          <span
-                            title="Kamu sudah presensi"
-                            className="text-berhasil-700"
-                          >
-                            &#10003;
+                      <div className="relative rounded-[1.5rem] bg-white px-4 py-4 shadow-[0_12px_26px_-18px_rgba(15,42,70,0.8)] ring-1 ring-merek-navy/25">
+                        <div className="flex items-baseline justify-between gap-3 border-b border-slate-200 pb-2">
+                          <h3 className="min-w-0 truncate text-xl font-black text-merek-navy">
+                            {s.nama}
+                          </h3>
+                        </div>
+
+                        <p className="mt-2.5 flex items-center gap-2.5 text-sm text-slate-700">
+                          <IkonTempat />
+                          <span className="min-w-0 truncate">
+                            {s.lokasi ?? 'Lokasi menyusul'}
                           </span>
-                        )}
-                        {s.status === 'ACTIVE' ? (
-                          <span className="rounded-md bg-berhasil-600 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-white">
-                            Live
+                        </p>
+
+                        <p className="mt-2 flex items-center gap-2.5 text-sm font-bold text-merek-navy">
+                          <IkonJam />
+                          {jam(s.jam_mulai)}
+                        </p>
+
+                        <div className="mt-2.5 flex items-center justify-between gap-3">
+                          <span className="flex min-w-0 items-center gap-2.5">
+                            <span
+                              className={`h-4 w-4 shrink-0 rounded-full ${
+                                s.status === 'ACTIVE'
+                                  ? 'bg-berhasil-600'
+                                  : s.status === 'CLOSED'
+                                    ? 'bg-slate-400'
+                                    : 'bg-bahaya-600'
+                              }`}
+                            />
+                            <span
+                              className={`truncate text-sm font-black uppercase ${
+                                s.status === 'ACTIVE'
+                                  ? 'text-berhasil-700'
+                                  : s.status === 'CLOSED'
+                                    ? 'text-slate-500'
+                                    : 'text-bahaya-600'
+                              }`}
+                            >
+                              {s.status === 'ACTIVE'
+                                ? 'Sesi Berlangsung'
+                                : s.status === 'CLOSED'
+                                  ? 'Sesi Selesai'
+                                  : 'Sesi Belum Dimulai'}
+                            </span>
                           </span>
-                        ) : (
-                          <span className="rounded-md bg-slate-300 px-2.5 py-1 text-[11px] font-bold uppercase text-slate-700">
-                            Selesai
-                          </span>
-                        )}
+
+                          {/* Tombol SCAN di mockup selalu ada. Peserta yang
+                              menekannya akan mendapat halaman yang menolak
+                              dia, jadi di sini cuma muncul untuk yang memang
+                              boleh memindai. Peserta yang sudah presensi
+                              melihat tanda centang di tempat yang sama. */}
+                          {s.saya_sudah_hadir ? (
+                            <span className="shrink-0 rounded-full bg-berhasil-50 px-4 py-2 text-xs font-black text-berhasil-700">
+                              &#10003; Hadir
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
                     </li>
                   ))}
@@ -152,6 +185,24 @@ export default function Jadwal() {
         })
       )}
     </div>
+  );
+}
+
+function IkonTempat() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className="h-6 w-6 shrink-0 text-slate-500" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z" strokeLinejoin="round" />
+      <path d="M10 21v-5h4v5" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IkonJam() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className="h-6 w-6 shrink-0 text-slate-600" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5.2l3.2 2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 

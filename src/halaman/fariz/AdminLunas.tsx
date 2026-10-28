@@ -19,6 +19,8 @@
 
 import { useState } from 'react';
 import { api, pesanDari } from '../../lib/api';
+import { useMuat } from '../../lib/kait';
+import { Memuat, PesanError, Kosong } from '../../komponen/Keadaan';
 
 interface HasilBaris {
   kode: string;
@@ -28,19 +30,19 @@ interface HasilBaris {
 }
 
 export default function AdminLunas() {
-  const [tab, setTab] = useState<'satuan' | 'borongan'>('borongan');
+  const [tab, setTab] = useState<'daftar' | 'borongan' | 'satuan'>('daftar');
 
   return (
     <div className="mx-auto max-w-2xl space-y-5 pb-10">
-      <header>
-        <h1 className="text-2xl font-bold">Tandai Lunas</h1>
+      <header className="text-center">
+        <h1 className="judul-tebal text-[2rem]">Tandai Lunas</h1>
         <p className="mt-1 text-sm text-slate-500">
           Divisi Administrasi. Setiap penandaan tercatat di log.
         </p>
       </header>
 
       <div className="flex gap-2">
-        {(['borongan', 'satuan'] as const).map((t) => (
+        {(['daftar', 'borongan', 'satuan'] as const).map((t) => (
           <button
             key={t}
             type="button"
@@ -56,7 +58,159 @@ export default function AdminLunas() {
         ))}
       </div>
 
-      {tab === 'borongan' ? <Borongan /> : <Satuan />}
+      {tab === 'daftar' ? <Daftar /> : tab === 'borongan' ? <Borongan /> : <Satuan />}
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+
+interface BelumLunas {
+  id: string;
+  kode_registrasi: string;
+  nama: string;
+  asal_sekolah: string | null;
+  kelas: string | null;
+}
+
+/**
+ * Daftar centang, mengikuti mockup Admin Tandai Lunas.
+ *
+ * Ditaruh sebagai tab pertama karena ini yang paling mudah dipahami, tapi
+ * BUKAN satu-satunya cara, dan borongan sengaja tidak dihapus. Lima ratus
+ * peserta tidak mungkin dicentang satu per satu di HP, dan yang dipegang
+ * Administrasi biasanya daftar kode dari catatan mereka sendiri, bukan daftar
+ * nama di layar ini.
+ *
+ * Penandaannya tetap lewat endpoint massal yang sama, jadi yang gagal tetap
+ * dilaporkan per kode.
+ */
+function Daftar() {
+  const { data, memuat, error, muatUlang } = useMuat<BelumLunas[]>(
+    (signal) => api.get<BelumLunas[]>('/payments/admin/belum-lunas?per=100', { signal }),
+    [],
+  );
+
+  const [pilih, setPilih] = useState<Set<string>>(new Set());
+  const [jalan, setJalan] = useState(false);
+  const [gagal, setGagal] = useState<string | null>(null);
+  const [hasil, setHasil] = useState<HasilBaris[] | null>(null);
+
+  if (memuat) return <Memuat />;
+  if (error) return <PesanError pesan={error} coba={() => muatUlang(false)} />;
+
+  const baris = data ?? [];
+  const semuaDipilih = baris.length > 0 && pilih.size === baris.length;
+
+  function ubah(kode: string) {
+    const s = new Set(pilih);
+    if (s.has(kode)) s.delete(kode);
+    else s.add(kode);
+    setPilih(s);
+  }
+
+  async function tandai() {
+    if (pilih.size === 0) return;
+    setJalan(true);
+    setGagal(null);
+    setHasil(null);
+    try {
+      const r = await api.post<{ rincian: HasilBaris[] }>(
+        '/payments/admin/tandai-lunas-massal',
+        { kode_registrasi: [...pilih] },
+      );
+      setHasil(r.rincian ?? []);
+      setPilih(new Set());
+      muatUlang(false);
+    } catch (e) {
+      setGagal(pesanDari(e));
+    } finally {
+      setJalan(false);
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between px-1">
+        <p className="text-lg font-extrabold">Dipilih {pilih.size} Peserta</p>
+        <button
+          type="button"
+          aria-label={semuaDipilih ? 'Batalkan semua' : 'Pilih semua'}
+          onClick={() =>
+            setPilih(semuaDipilih ? new Set() : new Set(baris.map((b) => b.kode_registrasi)))
+          }
+          className={`h-8 w-8 shrink-0 rounded-full border-[3px] border-slate-900 ${
+            semuaDipilih ? 'bg-slate-900' : 'bg-transparent'
+          }`}
+        />
+      </div>
+
+      {gagal && <PesanError pesan={gagal} />}
+
+      {baris.length === 0 ? (
+        <Kosong
+          judul="Tidak ada yang menunggu"
+          keterangan="Semua pendaftar yang datanya lengkap sudah ditandai lunas."
+        />
+      ) : (
+        <ul className="space-y-3">
+          {baris.map((b) => {
+            const dipilih = pilih.has(b.kode_registrasi);
+            return (
+              <li key={b.id}>
+                <button
+                  type="button"
+                  onClick={() => ubah(b.kode_registrasi)}
+                  className={`flex min-h-16 w-full items-center gap-3 rounded-full px-3 text-left shadow-[0_3px_0_-1px_rgba(0,0,0,0.15)] ${
+                    dipilih ? 'bg-utama-100' : 'bg-slate-200'
+                  }`}
+                >
+                  <span className="h-11 w-11 shrink-0 rounded-full bg-slate-400/70" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-lg font-black">{b.nama}</span>
+                    <span className="block truncate font-mono text-xs text-slate-600">
+                      {b.kode_registrasi}
+                      {b.asal_sekolah ? ` · ${b.asal_sekolah}` : ''}
+                    </span>
+                  </span>
+                  <span
+                    className={`h-7 w-7 shrink-0 rounded-full border-[3px] border-slate-900 ${
+                      dipilih ? 'bg-slate-900' : 'bg-transparent'
+                    }`}
+                  />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {pilih.size > 0 && (
+        <button
+          type="button"
+          disabled={jalan}
+          onClick={() => void tandai()}
+          className="tombol-utama sticky bottom-3 w-full px-6 py-3.5 disabled:opacity-60"
+        >
+          {jalan ? 'Menandai...' : `Tandai ${pilih.size} Peserta Lunas`}
+        </button>
+      )}
+
+      {hasil && (
+        <div className="kartu p-4 text-sm">
+          <p className="font-bold">
+            {hasil.filter((r) => r.status === 'LUNAS').length} berhasil,{' '}
+            {hasil.filter((r) => r.status === 'GAGAL').length} gagal
+          </p>
+          {hasil
+            .filter((r) => r.status === 'GAGAL')
+            .map((r) => (
+              <p key={r.kode} className="mt-1 text-xs text-bahaya-600">
+                {r.kode}: {r.pesan ?? 'gagal'}
+              </p>
+            ))}
+        </div>
+      )}
     </div>
   );
 }

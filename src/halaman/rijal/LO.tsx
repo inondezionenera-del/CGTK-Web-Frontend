@@ -57,7 +57,7 @@ export function DashboardLO() {
   return (
     <div className="mx-auto max-w-xl space-y-4 pb-10">
       <header>
-        <h1 className="text-2xl font-bold">Alumni Dampingan</h1>
+        <h1 className="judul-tebal text-[2rem]">Alumni Dampingan</h1>
         <p className="mt-1 text-sm text-slate-500">
           {daftar.length} alumni. Halaman ini hanya untuk dibaca.
         </p>
@@ -73,7 +73,7 @@ export function DashboardLO() {
           {daftar.map((a) => (
             <li
               key={a.id}
-              className="kartu border border-slate-200 p-4 dark:border-slate-800"
+              className="kartu ring-1 ring-slate-200 p-4 dark:border-slate-800"
             >
               <div className="flex gap-3">
                 {a.foto_url ? (
@@ -187,7 +187,7 @@ export function StatistikLO() {
   return (
     <div className="mx-auto max-w-xl space-y-4 pb-10">
       <header>
-        <h1 className="text-2xl font-bold">Statistik Booth</h1>
+        <h1 className="judul-tebal text-[2rem]">Statistik Booth</h1>
         {data?.ringkasan && (
           <p className="mt-1 text-sm text-slate-500">
             {data.ringkasan.alumni} alumni, {data.ringkasan.pengunjung} pengunjung
@@ -203,7 +203,7 @@ export function StatistikLO() {
           {(data?.booth ?? []).map((b, i) => (
             <li
               key={i}
-              className="kartu border border-slate-200 p-4 dark:border-slate-800"
+              className="kartu ring-1 ring-slate-200 p-4 dark:border-slate-800"
             >
               <div className="flex items-start justify-between gap-2">
                 <p className="min-w-0 truncate font-bold">{b.booth}</p>

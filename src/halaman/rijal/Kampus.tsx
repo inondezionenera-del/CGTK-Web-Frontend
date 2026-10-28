@@ -52,7 +52,7 @@ export default function Kampus() {
   return (
     <div className="mx-auto max-w-2xl space-y-4 pb-10">
       <header>
-        <h1 className="text-2xl font-bold">Direktori Kampus</h1>
+        <h1 className="judul-tebal text-[2rem]">Direktori Kampus</h1>
         <p className="mt-1 text-sm text-slate-500">
           Kampus yang hadir di CGTK 2027 dan alumni yang menunggu di boothnya.
         </p>
@@ -115,7 +115,7 @@ export default function Kampus() {
             {(data ?? []).map((k) => (
               <li
                 key={k.id}
-                className="kartu border border-slate-200 p-4 dark:border-slate-800"
+                className="kartu ring-1 ring-slate-200 p-4 dark:border-slate-800"
               >
                 <div className="flex items-start gap-3">
                   {k.logo_url ? (

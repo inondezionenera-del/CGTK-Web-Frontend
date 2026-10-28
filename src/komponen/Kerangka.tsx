@@ -52,11 +52,14 @@ export function Kerangka() {
 
   if (pathname.startsWith('/scan')) return <Outlet />;
 
-  // Empat halaman ini di mockup memakai latar penuh sampai ke tepi layar:
-  // Landing dengan foto hero, Login, Daftar, dan Bayar dengan latar air. Sisanya
+  // Halaman-halaman ini di mockup memakai latar penuh sampai ke tepi layar:
+  // Landing dengan foto hero, lalu Login, Daftar, Bayar, dan halaman info
+  // (/p/faq, /p/about, /p/terms) dengan latar air. Sisanya
   // tetap memakai lebar dan jarak tepi yang sama seperti sebelumnya, supaya
   // tidak ada halaman lain yang ikut berubah tata letaknya.
-  const penuh = ['/', '/masuk', '/daftar', '/bayar'].includes(pathname);
+  const penuh =
+    ['/', '/masuk', '/daftar', '/bayar'].includes(pathname) ||
+    pathname.startsWith('/p/');
 
   const peserta = pengguna?.peran === 'PESERTA';
   const menu = !masuk ? MENU_TAMU : peserta ? MENU_PESERTA : MENU_PANITIA;

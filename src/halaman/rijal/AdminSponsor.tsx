@@ -75,7 +75,7 @@ export default function AdminSponsor() {
   return (
     <div className="mx-auto max-w-2xl space-y-4 pb-10">
       <header>
-        <h1 className="text-2xl font-bold">Kelola Sponsor</h1>
+        <h1 className="judul-tebal text-[2rem]">Kelola Sponsor</h1>
         <p className="mt-1 text-sm text-slate-500">
           Divisi Pendanaan dan PDD. Urutan diatur dengan angka, tier menentukan
           ukuran logonya.

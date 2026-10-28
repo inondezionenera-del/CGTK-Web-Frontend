@@ -193,7 +193,7 @@ export default function Landing() {
               .map((a) => (
                 <li
                   key={a.id}
-                  className="kartu border border-slate-200 p-4 dark:border-slate-800"
+                  className="kartu ring-1 ring-slate-200 p-4 dark:border-slate-800"
                 >
                   <span className="rounded bg-utama-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-utama-700 dark:bg-utama-900/40 dark:text-utama-100">
                     Acara {a.urutan}

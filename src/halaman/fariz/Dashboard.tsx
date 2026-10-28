@@ -126,7 +126,7 @@ export default function Dashboard() {
       )}
 
       {data?.live && data.live.length > 0 && (
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <section className="kartu p-5">
           <p className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">
             Sedang Berlangsung
           </p>
@@ -329,7 +329,7 @@ function FiturTerkunci({ lunas }: { lunas: boolean }) {
           <Link
             key={f.ke}
             to={f.ke}
-            className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+            className="flex items-center justify-between kartu p-4"
           >
             <div>
               <p className="text-sm font-bold">{f.nama}</p>

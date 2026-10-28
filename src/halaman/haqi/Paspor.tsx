@@ -57,7 +57,7 @@ export default function Paspor() {
   return (
     <div className="mx-auto max-w-2xl space-y-4 pb-10">
       <header>
-        <h1 className="text-2xl font-bold">Paspor</h1>
+        <h1 className="judul-tebal text-[2rem]">Paspor</h1>
         <p className="mt-1 text-sm text-slate-500">
           Booth yang sudah kamu datangi.
         </p>
@@ -79,7 +79,7 @@ export default function Paspor() {
       </div>
 
       {isiTab.length > 0 && (
-        <div className="kartu border border-slate-200 p-4 dark:border-slate-800">
+        <div className="kartu ring-1 ring-slate-200 p-4 dark:border-slate-800">
           <p className="text-sm font-bold">
             Terkumpul {terkumpul} dari {isiTab.length}
           </p>

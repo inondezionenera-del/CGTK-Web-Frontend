@@ -1,18 +1,21 @@
 /* =============================================================================
-   CONTOH LENGKAP. Baca ini dulu sebelum bikin halamanmu sendiri.
+   /p/:slug — FAQ, About, Terms. Satu komponen untuk ketiganya.
 
-   Ini halaman /p/:slug punya RIJAL, dan sengaja dibuat utuh supaya dipakai
-   sebagai contekan. Isinya menunjukkan semua yang dipakai berulang:
+   Tidak ada satu pun teks tetap yang ditulis di dalam program. Isinya diubah
+   sendiri oleh panitia dari halaman admin; kalau teksnya ditulis di sini, tiap
+   kali FAQ berubah harus ada anak web yang buka laptop.
 
-     - satu komponen untuk banyak alamat (/p/faq, /p/about, /p/terms)
-     - mengambil data lewat api.get, bukan lewat supabase
-     - tiga keadaan ditangani: memuat, gagal, kosong
-     - pesan error ditampilkan apa adanya dari server
-     - tidak ada satu pun teks tetap yang ditulis di dalam program
+   Tampilannya mengikuti mockup FAQ: latar air sampai ke tepi layar, judul di
+   dalam panel kaca buram, lalu kartu-kartu biru tua.
 
-   Yang terakhir itu aturan paling keras di proyek ini. Isi FAQ, About, dan
-   Terms diubah sendiri oleh panitia dari halaman admin. Kalau teksnya ditulis
-   di sini, tiap kali FAQ berubah harus ada anak web yang buka laptop.
+   Isinya Markdown, dan sebelumnya ditampilkan apa adanya sebagai satu blok
+   teks. Itu artinya tanda pagar dan tanda bintang ikut kelihatan di layar, dan
+   halaman ini yang paling terlihat belum jadi.
+
+   Yang dipakai di sini pembaca Markdown kecil yang ditulis sendiri, bukan
+   pustaka: yang dibutuhkan cuma judul, paragraf, daftar, dan tebal. Menambah
+   pustaka Markdown untuk empat hal itu menambah puluhan kilobyte yang harus
+   diunduh lima ratus peserta lewat sinyal lapangan.
 ============================================================================= */
 
 import { useParams } from 'react-router-dom';
@@ -20,6 +23,83 @@ import { api } from '../../lib/api';
 import { useMuat } from '../../lib/kait';
 import { Memuat, PesanError, Kosong } from '../../komponen/Keadaan';
 import type { Halaman } from '../../types/api';
+
+interface Bagian {
+  judul: string | null;
+  isi: string[];
+}
+
+/**
+ * Memecah Markdown jadi bagian-bagian, satu kartu per judul.
+ *
+ * Untuk FAQ, tiap judul jadi pertanyaan dan isinya jadi jawaban. Untuk About
+ * dan Terms yang tidak punya judul sama sekali, semuanya jadi satu kartu.
+ */
+function pecah(teks: string): Bagian[] {
+  const bagian: Bagian[] = [];
+  let sekarang: Bagian | null = null;
+
+  for (const baris of (teks ?? '').split('\n')) {
+    const judul = baris.match(/^\s{0,3}#{1,6}\s+(.*)$/);
+    if (judul) {
+      if (sekarang) bagian.push(sekarang);
+      sekarang = { judul: (judul[1] ?? '').trim(), isi: [] };
+      continue;
+    }
+    if (!sekarang) sekarang = { judul: null, isi: [] };
+    sekarang.isi.push(baris);
+  }
+  if (sekarang) bagian.push(sekarang);
+
+  return bagian.filter((b) => b.judul || b.isi.some((x) => x.trim()));
+}
+
+/** Tebal **begini** jadi <strong>. Sisanya dibiarkan apa adanya. */
+function tebal(baris: string) {
+  return baris.split(/(\*\*[^*]+\*\*)/g).map((potong, i) =>
+    potong.startsWith('**') && potong.endsWith('**') ? (
+      <strong key={i}>{potong.slice(2, -2)}</strong>
+    ) : (
+      <span key={i}>{potong}</span>
+    ),
+  );
+}
+
+function Isi({ baris }: { baris: string[] }) {
+  const keluaran: React.ReactNode[] = [];
+  let daftar: string[] = [];
+
+  function tutupDaftar(kunci: string) {
+    if (daftar.length === 0) return;
+    keluaran.push(
+      <ul key={kunci} className="my-2 list-disc space-y-1 pl-5">
+        {daftar.map((d, i) => (
+          <li key={i}>{tebal(d)}</li>
+        ))}
+      </ul>,
+    );
+    daftar = [];
+  }
+
+  baris.forEach((b, i) => {
+    const poin = b.match(/^\s*[-*+]\s+(.*)$/);
+    if (poin) {
+      daftar.push(poin[1] ?? '');
+      return;
+    }
+    tutupDaftar(`u${i}`);
+    if (b.trim()) {
+      keluaran.push(
+        <p key={i} className="my-1.5">
+          {tebal(b)}
+        </p>,
+      );
+    }
+  });
+  tutupDaftar('u-akhir');
+
+  return <>{keluaran}</>;
+}
 
 export default function HalamanInfo() {
   const { slug = '' } = useParams();
@@ -30,28 +110,59 @@ export default function HalamanInfo() {
   );
 
   if (memuat) return <Memuat />;
-
-  if (error) {
-    return <PesanError pesan={error} coba={() => muatUlang(false)} />;
-  }
-
+  if (error) return <PesanError pesan={error} coba={() => muatUlang(false)} />;
   if (!data) {
-    return <Kosong judul="Halaman tidak ditemukan" keterangan="Alamatnya mungkin salah ketik." />;
+    return (
+      <Kosong
+        judul="Halaman tidak ditemukan"
+        keterangan="Alamatnya mungkin salah ketik."
+      />
+    );
   }
+
+  const bagian = pecah(data.isi ?? '');
 
   return (
-    <article className="mx-auto max-w-2xl">
-      <h1 className="text-2xl font-semibold">{data.judul}</h1>
-
-      {/*
-        data.isi berbentuk Markdown. Untuk sekarang ditampilkan apa adanya
-        supaya belum ada pustaka tambahan yang ikut masuk. Nanti kalau sudah
-        sepakat mau pakai pustaka Markdown yang mana, ganti bagian ini saja,
-        yang lain tidak perlu disentuh.
-      */}
-      <div className="mt-4 whitespace-pre-wrap leading-relaxed text-slate-700 dark:text-slate-300">
-        {data.isi}
+    <div className="latar-air min-h-[calc(100dvh-3.5rem)] px-4 pb-14 pt-8">
+      {/* Panel kaca buram di belakang judul, seperti di mockup. */}
+      <div className="mx-auto w-fit rounded-2xl bg-white/20 px-10 py-3 backdrop-blur-sm">
+        <h1 className="judul-stiker text-center text-[2.6rem] uppercase leading-none">
+          {data.judul}
+        </h1>
       </div>
-    </article>
+
+      <div className="mx-auto mt-7 max-w-2xl space-y-5">
+        {bagian.length === 0 ? (
+          <p className="rounded-[1.75rem] bg-merek-navy p-6 text-center text-white/80">
+            Isinya belum ditulis panitia.
+          </p>
+        ) : (
+          bagian.map((b, i) => (
+            <section
+              key={i}
+              className="rounded-[1.75rem] bg-merek-navy px-5 py-5 text-white shadow-[0_14px_30px_-18px_rgba(0,0,0,0.8)]"
+            >
+              {b.judul && (
+                <div className="flex gap-3 border-b border-white/40 pb-3">
+                  <span className="shrink-0 text-xl font-black leading-tight">Q.</span>
+                  <h2 className="text-base font-bold leading-snug">{b.judul}</h2>
+                </div>
+              )}
+
+              {b.isi.some((x) => x.trim()) && (
+                <div className={`flex gap-3 ${b.judul ? 'pt-3' : ''}`}>
+                  {b.judul && (
+                    <span className="shrink-0 text-xl font-black leading-tight">A.</span>
+                  )}
+                  <div className="min-w-0 text-sm leading-relaxed text-white/90">
+                    <Isi baris={b.isi} />
+                  </div>
+                </div>
+              )}
+            </section>
+          ))
+        )}
+      </div>
+    </div>
   );
 }

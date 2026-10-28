@@ -33,12 +33,13 @@ interface Tombol {
   label: string;
   kunciXp: string;
   warna: string;
+  maskot: string;
 }
 
 const TOMBOL: Tombol[] = [
-  { jenis: 'HADIR', label: 'Hadir', kunciXp: 'xp_booth_hadir', warna: 'bg-merek-navy' },
-  { jenis: 'AKTIF', label: 'Aktif', kunciXp: 'xp_booth_aktif', warna: 'bg-merek-magenta' },
-  { jenis: 'SANGAT_AKTIF', label: 'Sangat Aktif', kunciXp: 'xp_booth_sangat_aktif', warna: 'bg-merek-oranye' },
+  { jenis: 'HADIR', label: 'HADIR', kunciXp: 'xp_booth_hadir', warna: '#1b3a5c', maskot: 'nilai-hadir' },
+  { jenis: 'AKTIF', label: 'AKTIF', kunciXp: 'xp_booth_aktif', warna: '#7b2355', maskot: 'nilai-aktif' },
+  { jenis: 'SANGAT_AKTIF', label: 'SANGAT AKTIF', kunciXp: 'xp_booth_sangat_aktif', warna: '#f4514f', maskot: 'nilai-sangat-aktif' },
 ];
 
 interface ScanTerakhir {
@@ -212,24 +213,44 @@ export default function ScannerBooth() {
       {/* Pop-up tiga tombol. Tidak ada kolom isian, tidak ada keyboard. */}
       {isiQr && (
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 p-4 sm:items-center">
-          <div className="kartu w-full max-w-sm p-5">
-            <p className="text-center text-sm font-semibold text-slate-500">
+          <div className="kartu w-full max-w-sm px-5 pb-5 pt-7">
+            {/* Mockup menaruh nama peserta di sini. Namanya baru diketahui
+                sesudah penilaian dikirim, karena yang dipegang sekarang cuma
+                isi QR-nya. Menampilkan "Peserta" sebagai pengganti cuma
+                tulisan yang tidak pernah berubah, jadi barisnya ditiadakan. */}
+            <p className="judul-tebal text-center text-xl">
               Seberapa aktif peserta ini?
             </p>
-            <div className="mt-4 space-y-3">
+
+            {/* Tiga baris, masing-masing wajah kecil di luar kiri, label, dan
+                angka XP. Garis tebal berwarna di bawah tiap baris itu yang
+                membedakan ketiganya di mockup; panitia memilih sambil berdiri
+                dan warnanya lebih cepat ditangkap daripada tulisannya. */}
+            <div className="mt-5 space-y-3.5">
               {TOMBOL.map((t) => (
                 <button
                   key={t.jenis}
                   type="button"
                   disabled={sibuk}
                   onClick={() => void beri(t.jenis)}
-                  className={`flex min-h-16 w-full items-center justify-between rounded-2xl px-5 text-white disabled:opacity-60 ${t.warna}`}
+                  className="flex min-h-16 w-full items-center gap-3 disabled:opacity-60"
                 >
-                  <span className="text-lg font-black">{t.label}</span>
-                  {/* Angka XP dibungkus kapsul berlebar tetap supaya satu digit
-                      dan dua digit sama rapinya. */}
-                  <span className="min-w-20 rounded-full bg-black/20 px-3 py-1 text-center text-sm font-black tabular-nums">
-                    +{xp[t.kunciXp] ?? '--'} XP
+                  <img
+                    src={`/maskot/${t.maskot}.png`}
+                    alt=""
+                    aria-hidden
+                    className="h-12 w-12 shrink-0 rounded-full bg-white object-cover ring-2 ring-white drop-shadow"
+                  />
+                  <span
+                    className="flex min-h-14 flex-1 items-center justify-between rounded-2xl bg-slate-100 pl-4 pr-3"
+                    style={{ borderBottom: `5px solid ${t.warna}` }}
+                  >
+                    <span className="text-left text-base font-black text-slate-900">
+                      {t.label}
+                    </span>
+                    <span className="min-w-20 text-right text-base font-black tabular-nums text-merek-oranye">
+                      +{xp[t.kunciXp] ?? '--'} XP
+                    </span>
                   </span>
                 </button>
               ))}

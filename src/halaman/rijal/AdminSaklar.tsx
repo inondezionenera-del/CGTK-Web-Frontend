@@ -22,6 +22,13 @@ import { useMuat, useMuatUlangBerkala } from '../../lib/kait';
 import { Memuat, PesanError, Kosong } from '../../komponen/Keadaan';
 import type { Sesi, StatusSesi } from '../../types/api';
 
+/** Tiga gradasi dari mockup, dipakai berputar mengikuti urutan sesi. */
+const GRADASI = [
+  'linear-gradient(90deg, #ff5a00 0%, #ffb37a 70%, #fff 100%)',
+  'linear-gradient(90deg, #7b1f5a 0%, #e0199c 70%, #fff 100%)',
+  'linear-gradient(90deg, #0f3a66 0%, #2f9bdc 70%, #fff 100%)',
+];
+
 export default function AdminSaklar() {
   const { data, memuat, error, muatUlang } = useMuat<Sesi[]>(
     (signal) => api.get<Sesi[]>('/events/sessions/admin', { signal }),
@@ -55,8 +62,8 @@ export default function AdminSaklar() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 pb-10">
-      <header>
-        <h1 className="text-2xl font-bold">Saklar Sesi</h1>
+      <header className="text-center">
+        <h1 className="judul-tebal text-[2rem] uppercase">Saklar Sesi</h1>
         <p className="mt-1 text-sm text-slate-500">
           Scanner panitia hanya bisa memindai kalau sesinya berstatus ACTIVE.
         </p>
@@ -70,55 +77,65 @@ export default function AdminSaklar() {
           keterangan="Divisi Acara belum membuat sesi apa pun."
         />
       ) : (
-        <ul className="space-y-3">
-          {(data ?? []).map((s) => (
-            <li
-              key={s.id}
-              className={`kartu flex flex-wrap items-center justify-between gap-3 border p-4 ${
-                s.status === 'ACTIVE'
-                  ? 'border-berhasil-600'
-                  : 'border-slate-200 dark:border-slate-800'
-              }`}
-            >
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h2 className="truncate font-bold">{s.nama}</h2>
+        <ul className="space-y-4">
+          {(data ?? []).map((s, i) => (
+            <li key={s.id}>
+              {/* Kartu bergradasi dengan saklar besar, mengikuti mockup.
+                  Warnanya berputar tiga-tiga mengikuti urutan sesi, bukan
+                  mengikuti statusnya: status sudah dinyatakan oleh saklarnya
+                  sendiri, dan dua penanda untuk satu hal cuma membingungkan.
+
+                  Saklarnya tombol penuh, bukan kotak centang kecil. Dipakai
+                  Divisi Acara sambil berdiri di tengah acara, dan salah tekan
+                  di sini mengunci scanner semua panitia sekaligus. */}
+              <button
+                type="button"
+                disabled={sibuk === s.id}
+                onClick={() =>
+                  s.status === 'ACTIVE' ? setKonfirmasi(s) : void ubah(s, 'ACTIVE')
+                }
+                className="flex w-full items-center gap-3 rounded-[1.75rem] p-4 text-left shadow-[0_6px_0_-1px_rgba(0,0,0,0.18)] disabled:opacity-60"
+                style={{ backgroundImage: GRADASI[i % GRADASI.length] }}
+              >
+                <span className="min-w-0 flex-1">
+                  <img
+                    src="/logo-cgtk.png"
+                    alt=""
+                    aria-hidden
+                    className="h-9 w-auto drop-shadow"
+                  />
+                  <span className="mt-1 block truncate text-xl font-black uppercase leading-tight text-white drop-shadow">
+                    {s.nama}
+                  </span>
+                  <span className="block truncate text-xs font-semibold text-white/80">
+                    {s.lokasi ?? 'Tanpa lokasi'}
+                    {s.status === 'DRAFT' ? ' · draft' : ''}
+                  </span>
+                </span>
+
+                {/* Saklar. Knop putih bergeser, dan kata ON/OFF ada di sisi
+                    yang kosong, persis seperti gambar. */}
+                <span
+                  className={`relative flex h-16 w-32 shrink-0 items-center rounded-2xl border-[5px] bg-white/95 ${
+                    s.status === 'ACTIVE' ? 'border-[#3ddc00]' : 'border-[#ff1b1b]'
+                  }`}
+                >
                   <span
-                    className={`shrink-0 rounded px-2 py-0.5 text-[10px] font-extrabold ${
+                    className={`absolute inset-y-0 w-1/2 rounded-xl bg-white shadow-md transition-all ${
+                      s.status === 'ACTIVE' ? 'right-0' : 'left-0'
+                    }`}
+                  />
+                  <span
+                    className={`relative z-10 w-full text-center text-xl font-black ${
                       s.status === 'ACTIVE'
-                        ? 'bg-berhasil-600 text-white'
-                        : s.status === 'CLOSED'
-                          ? 'bg-slate-400 text-white'
-                          : 'bg-slate-200 text-slate-700'
+                        ? 'pr-16 text-[#2bb000]'
+                        : 'pl-16 text-[#d10000]'
                     }`}
                   >
-                    {s.status}
+                    {s.status === 'ACTIVE' ? 'ON' : 'OFF'}
                   </span>
-                </div>
-                <p className="mt-0.5 truncate text-xs text-slate-500">
-                  {s.lokasi ?? 'Tanpa lokasi'}
-                </p>
-              </div>
-
-              {s.status === 'ACTIVE' ? (
-                <button
-                  type="button"
-                  disabled={sibuk === s.id}
-                  onClick={() => setKonfirmasi(s)}
-                  className="rounded-xl bg-bahaya-600 px-6 text-sm font-black text-white disabled:opacity-50"
-                >
-                  TUTUP SESI
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  disabled={sibuk === s.id}
-                  onClick={() => void ubah(s, 'ACTIVE')}
-                  className="rounded-xl bg-berhasil-600 px-6 text-sm font-black text-white disabled:opacity-50"
-                >
-                  BUKA SESI
-                </button>
-              )}
+                </span>
+              </button>
             </li>
           ))}
         </ul>

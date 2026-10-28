@@ -86,7 +86,7 @@ export default function DetailKampus() {
 
   return (
     <div className="mx-auto max-w-xl space-y-5 pb-10">
-      <header className="kartu border border-slate-200 p-5 dark:border-slate-800">
+      <header className="kartu ring-1 ring-slate-200 p-5 dark:border-slate-800">
         <div className="flex items-start gap-4">
           {k.logo_url ? (
             <img
@@ -132,33 +132,46 @@ export default function DetailKampus() {
           <h2 className="text-xs font-black uppercase tracking-wider text-slate-400">
             Alumni yang hadir
           </h2>
-          <ul className="mt-2 space-y-2">
+          {/* Dua kolom dengan foto besar, mengikuti mockup KARTU. Alumni
+              datang sukarela, dan menampilkan mereka dengan layak adalah
+              bagian dari alasan mereka mau datang lagi tahun depan. */}
+          <ul className="mt-2 grid grid-cols-2 gap-3">
             {data.alumni.map((a) => (
-              <li
-                key={a.id}
-                className="kartu flex gap-3 border border-slate-200 p-3 dark:border-slate-800"
-              >
+              <li key={a.id} className="kartu p-3">
                 {a.foto_url ? (
                   <img
                     src={a.foto_url}
                     alt=""
                     loading="lazy"
-                    className="h-12 w-12 shrink-0 rounded-full object-cover"
+                    className="aspect-square w-full rounded-xl bg-slate-200 object-cover"
                   />
                 ) : (
-                  <div className="h-12 w-12 shrink-0 rounded-full bg-slate-200 dark:bg-slate-700" />
+                  <div className="flex aspect-square w-full items-end justify-center overflow-hidden rounded-xl bg-slate-300">
+                    <svg viewBox="0 0 64 64" aria-hidden className="h-4/5 w-4/5 text-slate-100" fill="currentColor">
+                      <circle cx="32" cy="22" r="13" />
+                      <path d="M6 64a26 26 0 0 1 52 0z" />
+                    </svg>
+                  </div>
                 )}
-                <div className="min-w-0">
-                  <p className="font-bold">{a.nama}</p>
-                  <p className="text-xs text-slate-500">
-                    {[a.jurusan, a.angkatan].filter(Boolean).join(' · ')}
+
+                <p className="mt-2 text-sm leading-snug">
+                  <span className="font-black">Nama:</span> {a.nama}
+                </p>
+                {a.jurusan && (
+                  <p className="text-sm leading-snug">
+                    <span className="font-black">Jurusan:</span> {a.jurusan}
                   </p>
-                  {a.bio && (
-                    <p className="mt-1 text-xs italic text-slate-600 dark:text-slate-300">
-                      {a.bio}
-                    </p>
-                  )}
-                </div>
+                )}
+                {a.angkatan && (
+                  <p className="text-sm leading-snug">
+                    <span className="font-black">Angkatan:</span> {a.angkatan}
+                  </p>
+                )}
+                {a.bio && (
+                  <p className="mt-1 line-clamp-3 text-xs italic text-slate-600">
+                    {a.bio}
+                  </p>
+                )}
               </li>
             ))}
           </ul>

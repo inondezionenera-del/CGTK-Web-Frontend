@@ -65,11 +65,20 @@ export default function Peringkat() {
   const saya = baris.find((b) => b.participant_id === pengguna?.id);
 
   return (
-    <div className="mx-auto max-w-xl space-y-4 pb-24">
+    <div
+      className="-mx-4 -mt-5 min-h-[calc(100dvh-3.5rem)] px-4 pb-28 pt-5"
+      style={{
+        backgroundImage:
+          'linear-gradient(180deg, #7fd0ef 0%, #a8e0f2 38%, #f3e2c4 62%, #f7ead3 100%)',
+      }}
+    >
+    <div className="mx-auto max-w-xl space-y-4">
       <header className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Papan Peringkat</h1>
-          <p className="mt-1 text-sm text-slate-500">50 besar</p>
+          <h1 className="judul-stiker text-[2.5rem] uppercase leading-none">
+            Pemenang
+          </h1>
+          <p className="mt-1 text-sm font-bold text-slate-700">50 besar</p>
         </div>
         {data?.beku && (
           <span className="shrink-0 rounded-lg bg-slate-700 px-3 py-1 text-xs font-bold text-white">
@@ -91,40 +100,44 @@ export default function Peringkat() {
           keterangan="Peringkat muncul setelah acara dimulai."
         />
       ) : (
+        <>
+        {/* Podium tiga besar, seperti di mockup. Hanya digambar kalau
+            pesertanya memang sudah tiga atau lebih; podium dengan dua kotak
+            kosong terlihat seperti halaman yang belum jadi. */}
+        {baris.length >= 3 && <Podium tiga={baris.slice(0, 3)} />}
+
         <ol className="space-y-2">
-          {baris.map((b) => {
+          {(baris.length >= 3 ? baris.slice(3) : baris).map((b) => {
             const aku = b.participant_id === pengguna?.id;
             return (
               <li
                 key={b.participant_id}
-                className={`kartu flex items-center gap-3 border p-3 ${
-                  aku
-                    ? 'border-utama-600 bg-utama-50 dark:bg-utama-900/20'
-                    : 'border-slate-200 dark:border-slate-800'
+                className={`flex items-center gap-3 rounded-full py-1.5 pl-1.5 pr-5 shadow-[0_3px_0_-1px_rgba(0,0,0,0.12)] ${
+                  aku ? 'bg-utama-100 ring-2 ring-merek-magenta' : 'bg-[#f6e6c3]'
                 }`}
               >
-                <span className="w-8 shrink-0 text-center text-lg font-black tabular-nums text-slate-400">
+                <span className="w-14 shrink-0 rounded-full bg-[#e3c88d] py-1.5 text-center text-lg font-black tabular-nums text-[#8a6a2f]">
                   {b.peringkat}
                 </span>
-                <span className="min-w-0 flex-1 truncate font-bold">
+                <span className="min-w-0 flex-1 truncate text-lg font-black text-[#8a6a2f]">
                   {b.nama}
                   {aku && (
-                    <span className="ml-2 text-xs font-semibold text-utama-700 dark:text-utama-100">
+                    <span className="ml-2 text-xs font-bold text-merek-magenta">
                       kamu
                     </span>
                   )}
                 </span>
-                <span className="shrink-0 font-black tabular-nums">
-                  {b.total_xp.toLocaleString('id-ID')}
-                  <span className="ml-1 text-xs font-normal text-slate-400">XP</span>
+                <span className="shrink-0 text-lg font-black tabular-nums text-[#8a6a2f]">
+                  {b.total_xp.toLocaleString('id-ID')} xp
                 </span>
               </li>
             );
           })}
         </ol>
+        </>
       )}
 
-      <section className="kartu border border-slate-200 p-4 dark:border-slate-800">
+      <section className="kartu ring-1 ring-slate-200 p-4 dark:border-slate-800">
         <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
           Kalau XP-nya sama, urutannya
         </p>
@@ -153,6 +166,67 @@ export default function Peringkat() {
             </span>
           </div>
         </div>
+      )}
+    </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+
+interface BarisPodium {
+  participant_id: string;
+  peringkat: number;
+  nama: string;
+  total_xp: number;
+}
+
+/**
+ * Podium juara satu, dua, tiga.
+ *
+ * Urutannya di layar 2 - 1 - 3, bukan 1 - 2 - 3. Itu yang membuat juara satu
+ * berada di tengah dan paling tinggi, dan itu yang dikenali orang sebagai
+ * podium tanpa perlu membaca angkanya.
+ *
+ * Tinggi kotaknya tetap, tidak mengikuti XP. Kalau mengikuti XP, selisih satu
+ * poin membuat ketiganya hampir sama tinggi dan podiumnya kehilangan arti.
+ */
+function Podium({ tiga }: { tiga: BarisPodium[] }) {
+  const [satu, dua, tigaB] = tiga;
+  const urutan = [
+    { b: dua, tinggi: 'h-24', warna: '#2f6bb0', cincin: '#1b3a5c', mahkota: '#c0c6cc' },
+    { b: satu, tinggi: 'h-36', warna: '#8e2a6b', cincin: '#8e2a6b', mahkota: '#f2c14e' },
+    { b: tigaB, tinggi: 'h-20', warna: '#ef4b50', cincin: '#ef4b50', mahkota: '#d08a3c' },
+  ];
+
+  return (
+    <div className="flex items-end justify-center gap-2 pb-2">
+      {urutan.map(({ b, tinggi, warna, cincin, mahkota }) =>
+        !b ? null : (
+          <div key={b.participant_id} className="flex min-w-0 flex-1 flex-col items-center">
+            {/* Mahkota. Digambar sebagai SVG supaya tetap tajam dan warnanya
+                bisa berbeda untuk tiap posisi. */}
+            <svg viewBox="0 0 48 28" aria-hidden className="h-6 w-10" fill={mahkota}>
+              <path d="M2 26 6 6l10 9 8-13 8 13 10-9 4 20z" />
+            </svg>
+
+            <span
+              className="-mt-1 block aspect-square w-full max-w-24 rounded-full border-4 bg-white"
+              style={{ borderColor: cincin }}
+            />
+
+            <span className="-mt-2 w-full truncate rounded-full bg-[#f6e6c3] px-2 py-1 text-center text-xs font-black text-[#8a6a2f]">
+              {b.nama} &middot; {b.total_xp.toLocaleString('id-ID')} xp
+            </span>
+
+            <div
+              className={`mt-1 flex w-full items-center justify-center rounded-t-lg ${tinggi}`}
+              style={{ background: warna }}
+            >
+              <span className="judul-stiker text-4xl">{b.peringkat}</span>
+            </div>
+          </div>
+        ),
       )}
     </div>
   );
