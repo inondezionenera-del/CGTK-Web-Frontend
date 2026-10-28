@@ -26,7 +26,8 @@ import DetailKampus from './halaman/rijal/DetailKampus';
 import { DashboardLO, StatistikLO } from './halaman/rijal/LO';
 import Kampus from './halaman/rijal/Kampus';
 import Masuk from './halaman/fariz/Masuk';
-import Daftar from './halaman/fariz/Daftar';
+import GerbangDaftar from './halaman/fariz/GerbangDaftar';
+import { Navigate } from 'react-router-dom';
 import Bayar from './halaman/fariz/Bayar';
 
 // Dua halaman ini membawa pustaka berat: pembaca QR untuk scanner, penggambar
@@ -93,7 +94,15 @@ export default function App() {
 
         {/* ---------------- FARIZ ---------------- */}
         <Route path="/masuk" element={<Masuk />} />
-        <Route path="/daftar" element={<WajibLogin><Daftar /></WajibLogin>} />
+        <Route path="/daftar" element={<GerbangDaftar />} />
+
+        {/* Alamat lama yang pernah dikirim server sebagai tujuan sesudah
+            login. Tidak pernah punya rutenya sendiri, jadi orang yang baru
+            pertama masuk mendarat di halaman tidak ditemukan dan mengira
+            login-nya gagal. Dialihkan, bukan dibiarkan 404, supaya tautan
+            atau token lama tetap mendarat di tempat yang benar. */}
+        <Route path="/register" element={<Navigate to="/daftar" replace />} />
+        <Route path="/alumni/sambutan" element={<Navigate to="/alumni" replace />} />
         <Route path="/bayar" element={<WajibLogin><Bayar /></WajibLogin>} />
         <Route path="/dashboard" element={<WajibLogin><Dashboard /></WajibLogin>} />
         <Route path="/scan" element={<WajibLogin><Scanner /></WajibLogin>} />

@@ -7,7 +7,14 @@
          tidak punya padanan gelap. Lihat juga @custom-variant dark di
          src/index.css yang mematikan semua kelas dark: sekaligus. -->
     <meta name="color-scheme" content="light" />
-    <link rel="icon" href="/logo-cgtk.png" />
+    <!-- Ikon tab memakai trisula, bukan tulisan CGTK.
+         .ico memuat enam ukuran sekaligus supaya tetap tajam di tab maupun
+         bookmark. Nama berkasnya sengaja baru, bukan menimpa yang lama:
+         browser menyimpan favicon lama cukup lama, dan nama yang berbeda
+         membuat ikonnya berganti tanpa harus menunggu cache kedaluwarsa. -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

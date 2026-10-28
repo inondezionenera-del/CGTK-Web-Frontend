@@ -195,11 +195,49 @@ export function Kerangka() {
 
   return (
     <div className="min-h-dvh bg-white text-slate-900">
-      <header className="sticky top-0 z-30 border-b border-slate-100 bg-white">
+      {/* z-50: DI ATAS lapisan gelap menu.
+
+          Sebelumnya header z-30 dan lapisannya z-40, jadi begitu menu terbuka
+          trisulanya tertutup dan tidak bisa ditekan lagi untuk menutup. Orang
+          harus menekan area gelap atau tombol Tutup, padahal logonya jelas
+          terlihat dan terasa seperti tombol yang macet.
+
+          Ketahuan waktu pengujian browser: klik kedua pada trisula ditolak
+          dengan "intercepts pointer events". */}
+      <header className="sticky top-0 z-50 border-b border-slate-100 bg-white">
         <div className="mx-auto flex h-16 max-w-5xl items-center gap-3 px-4">
-          <Link to={beranda} aria-label="Beranda CGTK" className="shrink-0">
-            <img src="/logo-cgtk.png" alt="CGTK" className="h-9 w-auto" />
-          </Link>
+          {/* ----------------------------------------------------------------
+              Trisula sebagai kontrol sidebar.
+
+              Trisula di aset aslinya mengarah ke samping. Diputar seperempat
+              putaran dia mengarah ke atas, dan itu justru posisi alami sebuah
+              trisula, jadi bentuk dan identitasnya tidak dikorbankan untuk
+              animasi. Terbuka mengarah ke atas, tertutup kembali ke samping.
+
+              Tombol, bukan tautan. Menekannya membuka dan menutup menu, bukan
+              memindahkan halaman. Jalan ke dashboard tetap ada dan jelas:
+              tautan pertama di bar atas, dan satu bagian tersendiri di dalam
+              menu.
+
+              aria-expanded dan aria-controls dipasang supaya pembaca layar
+              tahu ini kontrol buka-tutup dan tahu apa yang dikendalikannya.
+          ---------------------------------------------------------------- */}
+          <button
+            type="button"
+            onClick={() => setMenuBuka((v) => !v)}
+            aria-label={menuBuka ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
+            aria-expanded={menuBuka}
+            aria-controls="menu-navigasi"
+            className="-ml-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-merek-magenta"
+          >
+            <img
+              src="/trisula.png"
+              alt="CGTK"
+              className={`h-7 w-auto transition-transform duration-300 ease-out motion-reduce:transition-none ${
+                menuBuka ? '-rotate-90' : 'rotate-0'
+              }`}
+            />
+          </button>
 
           <nav className="ml-auto flex items-center gap-4 sm:gap-7">
             {utama.map((m) => (
@@ -223,18 +261,19 @@ export function Kerangka() {
               </Link>
             )}
 
+            {/* Tulisan Menu dipertahankan di samping trisula.
+
+                Ikon sendirian jarang dikenali sebagai kontrol oleh orang yang
+                baru pertama membuka web ini, dan panitia di hari acara tidak
+                punya waktu menebak. Dua-duanya membuka menu yang sama. */}
             <button
               type="button"
-              onClick={() => setMenuBuka(true)}
-              aria-label="Buka menu"
+              onClick={() => setMenuBuka((v) => !v)}
+              aria-label={menuBuka ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
               aria-expanded={menuBuka}
-              className="flex h-10 items-center gap-2 rounded-full bg-slate-100 px-4 text-sm font-black"
+              aria-controls="menu-navigasi"
+              className="flex h-10 items-center rounded-full bg-slate-100 px-4 text-sm font-black"
             >
-              <span className="flex flex-col gap-[3px]" aria-hidden>
-                <span className="block h-[2px] w-4 bg-slate-900" />
-                <span className="block h-[2px] w-4 bg-slate-900" />
-                <span className="block h-[2px] w-4 bg-slate-900" />
-              </span>
               Menu
             </button>
           </nav>
@@ -243,14 +282,15 @@ export function Kerangka() {
 
       {menuBuka && (
         <div
-          className="fixed inset-0 z-40 bg-black/50"
+          className="fixed inset-x-0 bottom-0 top-16 z-40 bg-black/50"
           onClick={() => setMenuBuka(false)}
         >
           <div
+            id="menu-navigasi"
             role="dialog"
-            aria-label="Menu"
+            aria-label="Menu navigasi"
             onClick={(e) => e.stopPropagation()}
-            className="ml-auto flex h-full w-[min(22rem,88vw)] flex-col bg-white"
+            className="ml-auto flex h-full w-[min(22rem,88vw)] flex-col bg-white shadow-2xl"
           >
             <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
               <div className="min-w-0">
@@ -270,6 +310,23 @@ export function Kerangka() {
                 Tutup
               </button>
             </div>
+
+            {/* Aksi ke rumah peran, berdiri sendiri di paling atas.
+
+                Dulu tugas ini dipegang logo. Sesudah logo berubah jadi
+                kontrol buka-tutup, jalan ke dashboard harus tetap ada dan
+                jelas, bukan hilang diam-diam di tengah daftar. */}
+            {masuk && (
+              <div className="px-5 pt-4">
+                <NavLink
+                  to={beranda}
+                  end
+                  className="tombol-utama flex items-center justify-center px-5 py-3 text-sm"
+                >
+                  Ke {labelBeranda(peran)}
+                </NavLink>
+              </div>
+            )}
 
             <nav className="flex-1 overflow-y-auto px-5 py-4">
               {kelompok.map((k) => (
@@ -330,6 +387,16 @@ export function Kerangka() {
       </main>
     </div>
   );
+}
+
+/** Nama rumah tiap peran, untuk tombol di dalam menu. */
+function labelBeranda(peran: string | undefined): string {
+  switch (peran) {
+    case 'PESERTA': return 'Dashboard';
+    case 'ALUMNI': return 'Beranda Alumni';
+    case 'LO_PENDIDIKAN': return 'Alumni Dampingan';
+    default: return 'Dashboard Panitia';
+  }
 }
 
 function labelPeran(peran: string | undefined): string {

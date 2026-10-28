@@ -41,7 +41,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { supabase } from './supabase';
-import { api } from './api';
+import { api, pesanDari } from './api';
 
 export interface Pengguna {
   id: string;
@@ -72,13 +72,29 @@ interface IsiSesi {
   pengguna: Pengguna | null;
   memuat: boolean;
   masuk: boolean;
+  /**
+   * Alasan kegagalan menyiapkan profil, kalau ada.
+   *
+   * Dibedakan dari "belum masuk" dengan sengaja. Autentikasi Google bisa
+   * berhasil sementara penyiapan profil di server gagal, dan dua keadaan itu
+   * terlihat sama di layar kalau tidak dipisah: pengguna kembali ke halaman
+   * masuk tanpa tahu apa-apa dan mengira login-nya gagal.
+   */
+  galat: string | null;
+  /** Benar kalau Google sudah menerima dia tapi profilnya belum siap. */
+  sesiAdaTapiProfilGagal: boolean;
 }
 
-const Konteks = createContext<IsiSesi>({ pengguna: null, memuat: true, masuk: false });
+const Konteks = createContext<IsiSesi>({
+  pengguna: null, memuat: true, masuk: false,
+  galat: null, sesiAdaTapiProfilGagal: false,
+});
 
 export function PenyediaSesi({ children }: { children: ReactNode }) {
   const [pengguna, setPengguna] = useState<Pengguna | null>(null);
   const [memuat, setMemuat] = useState(true);
+  const [galat, setGalat] = useState<string | null>(null);
+  const [adaSesi, setAdaSesi] = useState(false);
 
   useEffect(() => {
     let hidup = true;
@@ -89,9 +105,13 @@ export function PenyediaSesi({ children }: { children: ReactNode }) {
 
       if (!data.session) {
         setPengguna(null);
+        setAdaSesi(false);
+        setGalat(null);
         setMemuat(false);
         return;
       }
+
+      setAdaSesi(true);
 
       try {
         const hasil = await api.post<JawabanSinkron>('/auth/sinkron', {
@@ -103,14 +123,21 @@ export function PenyediaSesi({ children }: { children: ReactNode }) {
         // masuk bernilai true padahal isinya tidak ada apa-apa.
         const p = hasil?.pengguna;
         if (hidup) {
-          setPengguna(
-            p
-              ? { ...p, arahkan_ke: hasil.arahkan_ke ?? '/dashboard' }
-              : null,
-          );
+          if (p) {
+            setPengguna({ ...p, arahkan_ke: hasil.arahkan_ke ?? '/dashboard' });
+            setGalat(null);
+          } else {
+            setPengguna(null);
+            setGalat('Server tidak mengirim identitasmu. Coba masuk lagi.');
+          }
         }
-      } catch {
-        if (hidup) setPengguna(null);
+      } catch (e) {
+        // Pesannya dari server, apa adanya. Itu yang memberi tahu orangnya
+        // harus berbuat apa, misalnya akunnya dinonaktifkan panitia.
+        if (hidup) {
+          setPengguna(null);
+          setGalat(pesanDari(e));
+        }
       } finally {
         if (hidup) setMemuat(false);
       }
@@ -141,7 +168,15 @@ export function PenyediaSesi({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <Konteks.Provider value={{ pengguna, memuat, masuk: pengguna !== null }}>
+    <Konteks.Provider
+      value={{
+        pengguna,
+        memuat,
+        masuk: pengguna !== null,
+        galat,
+        sesiAdaTapiProfilGagal: adaSesi && pengguna === null && !memuat,
+      }}
+    >
       {children}
     </Konteks.Provider>
   );
