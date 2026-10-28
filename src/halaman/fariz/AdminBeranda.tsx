@@ -81,6 +81,18 @@ const ALAT: Alat[] = [
     izin: ['KELOLA_MASTER'],
   },
   {
+    ke: '/admin/lo',
+    nama: 'Tugaskan LO',
+    ket: 'Tanpa penugasan, dashboard LO kosong.',
+    izin: ['UNDANG_ALUMNI'],
+  },
+  {
+    ke: '/admin/form',
+    nama: 'Formulir Pendaftaran',
+    ket: 'Pertanyaan tambahan yang diisi peserta waktu mendaftar.',
+    izin: ['KELOLA_FORM'],
+  },
+  {
     ke: '/admin/ekspor',
     nama: 'Ekspor & Log',
     ket: 'Unduh CSV peserta dan presensi, baca log perubahan.',

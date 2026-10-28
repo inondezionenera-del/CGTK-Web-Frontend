@@ -25,7 +25,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import jsQR from 'jsqr';
-import { api, KesalahanApi } from '../../lib/api';
+import { api, KesalahanApi, pesanDari } from '../../lib/api';
 import { useMuat } from '../../lib/kait';
 import { Memuat, PesanError } from '../../komponen/Keadaan';
 import {
@@ -128,6 +128,7 @@ export default function Scanner() {
   const [jumlahHariIni, setJumlahHariIni] = useState(0);
   const [status, setStatus] = useState<StatusAntrean>({ keadaan: 'online', antre: 0 });
   const [kodeManual, setKodeManual] = useState('');
+  const [cariNama, setCariNama] = useState(false);
 
   const video = useRef<HTMLVideoElement>(null);
   const stream = useRef<MediaStream | null>(null);
@@ -460,6 +461,17 @@ export default function Scanner() {
         )}
       </div>
 
+      {cariNama && sesiTerpilih !== null && (
+        <PanelCariNama
+          sessionId={sesiTerpilih}
+          tutup={() => setCariNama(false)}
+          selesai={(nama) => {
+            setCariNama(false);
+            setHasil({ cabang: 'BERHASIL', nama, rincian: 'Presensi manual' });
+          }}
+        />
+      )}
+
       {/* Cadangan: ketik kode kalau kamera bermasalah atau QR peserta buram */}
       <div className="space-y-2 p-3">
         <div className="flex gap-2">
@@ -481,6 +493,20 @@ export default function Scanner() {
             Kirim
           </button>
         </div>
+        {/* Cari Nama, seperti di mockup. Jalan keluar terakhir waktu QR
+            pesertanya tidak terbaca DAN kodenya juga tidak bisa dibaca:
+            layarnya retak, HP-nya mati, atau QR-nya belum pernah terbit.
+            Presensi lewat jalur ini ditandai MANUAL di database dan wajib
+            diberi alasan, jadi tetap bisa ditelusuri sesudah acara. */}
+        <button
+          type="button"
+          disabled={!bolehScan}
+          onClick={() => setCariNama(true)}
+          className="w-full rounded-full bg-white/10 py-3 text-sm font-bold text-white disabled:opacity-40"
+        >
+          Cari Nama
+        </button>
+
         {status.keadaan === 'offline' && status.antre > 0 && navigator.onLine && (
           <button
             type="button"
@@ -489,6 +515,187 @@ export default function Scanner() {
           >
             Kirim {status.antre} yang tertahan
           </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+
+interface PesertaCari {
+  id: string;
+  nama: string;
+  asal_sekolah: string;
+  kelas: string;
+}
+
+/**
+ * Cari peserta berdasarkan nama lalu catat presensinya secara manual.
+ *
+ * Alasan WAJIB diisi, dan itu bukan formalitas. Jalur ini melewati seluruh
+ * pemeriksaan QR: tidak ada tanda tangan yang diverifikasi, tidak ada bukti
+ * bahwa orangnya benar-benar memegang QR itu. Satu-satunya yang tersisa untuk
+ * menelusuri kalau ada yang janggal sesudah acara adalah catatan siapa yang
+ * memasukkannya dan kenapa. Server juga menolak alasan di bawah tiga huruf.
+ *
+ * Pencarian ditunda tiga ratus milidetik sesudah ketikan terakhir. Tanpa itu
+ * mengetik satu nama mengirim satu permintaan per huruf, dan di hari acara
+ * scanner lain ikut melambat karenanya.
+ */
+function PanelCariNama({
+  sessionId,
+  tutup,
+  selesai,
+}: {
+  sessionId: number;
+  tutup: () => void;
+  selesai: (nama: string) => void;
+}) {
+  const [q, setQ] = useState('');
+  const [hasilCari, setHasilCari] = useState<PesertaCari[]>([]);
+  const [mencari, setMencari] = useState(false);
+  const [dipilih, setDipilih] = useState<PesertaCari | null>(null);
+  const [alasan, setAlasan] = useState('');
+  const [sibuk, setSibuk] = useState(false);
+  const [gagal, setGagal] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (q.trim().length < 2) {
+      setHasilCari([]);
+      return;
+    }
+    const batal = new AbortController();
+    const jeda = setTimeout(() => {
+      setMencari(true);
+      api
+        .get<PesertaCari[]>(`/participants/cari?q=${encodeURIComponent(q.trim())}`, {
+          signal: batal.signal,
+        })
+        .then((r) => setHasilCari(r ?? []))
+        .catch(() => setHasilCari([]))
+        .finally(() => setMencari(false));
+    }, 300);
+
+    return () => {
+      clearTimeout(jeda);
+      batal.abort();
+    };
+  }, [q]);
+
+  async function kirimManual() {
+    if (!dipilih) return;
+    setSibuk(true);
+    setGagal(null);
+    try {
+      await api.post('/attendance/manual', {
+        participant_id: dipilih.id,
+        session_id: sessionId,
+        alasan: alasan.trim(),
+      });
+      selesai(dipilih.nama);
+    } catch (e) {
+      setGagal(pesanDari(e));
+    } finally {
+      setSibuk(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4 sm:items-center">
+      <div className="kartu max-h-[85dvh] w-full max-w-sm overflow-y-auto p-5">
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="judul-tebal text-xl">Cari Nama</h2>
+          <button
+            type="button"
+            onClick={tutup}
+            className="shrink-0 text-sm font-bold text-slate-500"
+          >
+            Tutup
+          </button>
+        </div>
+
+        {!dipilih ? (
+          <>
+            <input
+              autoFocus
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Ketik nama peserta"
+              className="isian mt-3 outline-none focus:ring-2 focus:ring-merek-magenta/40"
+            />
+
+            {mencari && <p className="mt-2 text-sm text-slate-500">Mencari...</p>}
+
+            {!mencari && q.trim().length >= 2 && hasilCari.length === 0 && (
+              <p className="mt-2 text-sm text-slate-500">
+                Tidak ada yang cocok. Coba potongan namanya saja.
+              </p>
+            )}
+
+            <ul className="mt-2 space-y-1.5">
+              {hasilCari.map((p) => (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    onClick={() => setDipilih(p)}
+                    className="w-full rounded-xl bg-slate-100 p-3 text-left"
+                  >
+                    <span className="block truncate font-bold">{p.nama}</span>
+                    <span className="block truncate text-xs text-slate-500">
+                      {[p.asal_sekolah, p.kelas].filter(Boolean).join(' \u00b7 ')}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <>
+            <div className="mt-3 rounded-xl bg-slate-100 p-3">
+              <p className="font-black">{dipilih.nama}</p>
+              <p className="text-xs text-slate-500">
+                {[dipilih.asal_sekolah, dipilih.kelas].filter(Boolean).join(' \u00b7 ')}
+              </p>
+            </div>
+
+            <label htmlFor="alasan" className="mt-4 block text-sm font-black">
+              Kenapa dicatat manual?
+            </label>
+            <input
+              id="alasan"
+              autoFocus
+              value={alasan}
+              maxLength={200}
+              onChange={(e) => setAlasan(e.target.value)}
+              placeholder="HP mati, QR belum terbit, layar retak"
+              className="isian mt-1 outline-none focus:ring-2 focus:ring-merek-magenta/40"
+            />
+            <p className="mt-1 text-xs leading-relaxed text-slate-500">
+              Wajib diisi. Jalur ini melewati pemeriksaan QR, jadi catatan ini
+              satu-satunya cara menelusurinya sesudah acara.
+            </p>
+
+            {gagal && <p className="mt-2 text-sm font-bold text-bahaya-600">{gagal}</p>}
+
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                disabled={alasan.trim().length < 3 || sibuk}
+                onClick={() => void kirimManual()}
+                className="tombol-utama flex-1 px-5 py-3 disabled:opacity-50"
+              >
+                {sibuk ? 'Mencatat...' : 'Catat Hadir'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDipilih(null)}
+                className="flex-1 rounded-full bg-white px-5 py-3 font-bold ring-1 ring-slate-300"
+              >
+                Ganti
+              </button>
+            </div>
+          </>
         )}
       </div>
     </div>

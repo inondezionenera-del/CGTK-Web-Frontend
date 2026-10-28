@@ -56,6 +56,8 @@ const AdminAlumni = lazy(() => import('./halaman/rijal/AdminAlumni'));
 const AdminBooth = lazy(() => import('./halaman/rijal/AdminBooth'));
 const AdminMaster = lazy(() => import('./halaman/rijal/AdminMaster'));
 const AdminEkspor = lazy(() => import('./halaman/rijal/AdminEkspor'));
+const AdminLO = lazy(() => import('./halaman/rijal/AdminLO'));
+const AdminForm = lazy(() => import('./halaman/fariz/AdminForm'));
 
 
 // ---------------- ALUMNI ----------------
@@ -109,6 +111,8 @@ export default function App() {
         <Route path="/admin/booth" element={<WajibLogin><AdminBooth /></WajibLogin>} />
         <Route path="/admin/kampus" element={<WajibLogin><AdminMaster /></WajibLogin>} />
         <Route path="/admin/ekspor" element={<WajibLogin><AdminEkspor /></WajibLogin>} />
+        <Route path="/admin/lo" element={<WajibLogin><AdminLO /></WajibLogin>} />
+        <Route path="/admin/form" element={<WajibLogin><AdminForm /></WajibLogin>} />
 
         {/* ---------------- HAQI ---------------- */}
         <Route path="/quiz" element={<WajibLogin><Kuis /></WajibLogin>} />
