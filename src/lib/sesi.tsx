@@ -8,6 +8,34 @@
      4. backend menjawab: dia siapa, perannya apa, mau diarahkan ke mana
 
    Perpanjangan token diurus pustaka Supabase. Tidak ada /auth/refresh.
+
+   CATATAN PENTING soal bentuk jawaban, karena di sinilah kesalahan paling
+   mahal di seluruh frontend pernah terjadi.
+
+   POST /auth/sinkron menjawab:
+
+       { sukses, data: { pengguna: { id, nama, peran, izin, ... },
+                         arahkan_ke, akun_baru } }
+
+   api.post sudah membuka amplop dan mengembalikan `data`. Jadi yang diterima
+   di sini adalah OBJEK PEMBUNGKUS, bukan penggunanya. Versi sebelumnya
+   menyimpan pembungkus itu apa adanya sebagai Pengguna, dan akibatnya
+   pengguna.id, pengguna.nama, dan pengguna.peran SELALU undefined di seluruh
+   aplikasi.
+
+   Yang membuatnya sulit disadari: arahkan_ke kebetulan berada di pembungkus
+   yang sama, jadi pengalihan sesudah login tetap benar dan login terasa
+   berhasil. Yang rusak diam-diam:
+
+     - peran selalu undefined, jadi SETIAP cabang berdasarkan peran jatuh ke
+       default. Menu, tujuan logo, dan halaman mana yang muncul semuanya salah.
+     - nama selalu kosong, jadi layar menulis "Peserta" dan "Belum masuk"
+       untuk orang yang jelas-jelas sudah masuk.
+     - id selalu undefined, jadi halaman yang memanggil /missions/saya/<id>
+       mengirim alamat yang tidak sah.
+
+   Ketahuan waktu membuka menu di browser sungguhan: kepalanya menulis
+   "Belum masuk" padahal area panitia justru muncul di bawahnya.
 ============================================================================= */
 
 import { createContext, useContext, useEffect, useState } from 'react';
@@ -17,9 +45,27 @@ import { api } from './api';
 
 export interface Pengguna {
   id: string;
+  email?: string;
   nama: string;
+  foto_url?: string | null;
   peran: string;
+  izin?: string[];
+  /** Disalin dari pembungkusnya supaya pemanggil lama tetap jalan. */
   arahkan_ke: string;
+}
+
+/** Bentuk sebenarnya yang dikirim POST /auth/sinkron. */
+interface JawabanSinkron {
+  pengguna: {
+    id: string;
+    email?: string;
+    nama: string;
+    foto_url?: string | null;
+    peran: string;
+    izin?: string[];
+  } | null;
+  arahkan_ke?: string;
+  akun_baru?: boolean;
 }
 
 interface IsiSesi {
@@ -48,10 +94,21 @@ export function PenyediaSesi({ children }: { children: ReactNode }) {
       }
 
       try {
-        const hasil = await api.post<Pengguna>('/auth/sinkron', {
+        const hasil = await api.post<JawabanSinkron>('/auth/sinkron', {
           access_token: data.session.access_token,
         });
-        if (hidup) setPengguna(hasil);
+
+        // Dibuka satu tingkat. Kalau penggunanya tidak ada, diperlakukan
+        // sebagai belum masuk, bukan sebagai objek kosong yang membuat
+        // masuk bernilai true padahal isinya tidak ada apa-apa.
+        const p = hasil?.pengguna;
+        if (hidup) {
+          setPengguna(
+            p
+              ? { ...p, arahkan_ke: hasil.arahkan_ke ?? '/dashboard' }
+              : null,
+          );
+        }
       } catch {
         if (hidup) setPengguna(null);
       } finally {

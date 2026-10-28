@@ -22,8 +22,19 @@ interface Poster {
   id: number;
   nama_tampilan: string;
   kode_booth: string;
-  qr_token_booth: string;
+  // qr_booth, BUKAN qr_token_booth.
+  //
+  // Server mengirim kolom bernama qr_booth yang sudah berisi QR lengkap hasil
+  // susunQrBooth. Halaman ini sebelumnya membaca qr_token_booth, yang tidak
+  // pernah ada di jawaban, jadi yang masuk ke penggambar QR adalah undefined
+  // dan pustaka QR-nya melempar "No input text".
+  //
+  // Akibatnya tidak kelihatan dari kode: posternya tetap tercetak, rapi,
+  // lengkap dengan nama booth dan kodenya, cuma kotak QR-nya kosong. Baru
+  // ketahuan waktu halaman ini dibuka di browser sungguhan.
+  qr_booth: string;
   lokasi?: string | null;
+  acara?: string | null;
 }
 
 export default function PosterBooth() {
@@ -113,14 +124,16 @@ function HalamanPoster({ booth }: { booth: Poster }) {
   const kanvas = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (kanvas.current) {
-      void QRCode.toCanvas(kanvas.current, booth.qr_token_booth, {
+    // Tanpa penjaga ini, booth yang QR-nya belum terbit membuat pustaka QR
+    // melempar dan seluruh halaman cetak ikut berhenti di tengah jalan.
+    if (kanvas.current && booth.qr_booth) {
+      void QRCode.toCanvas(kanvas.current, booth.qr_booth, {
         width: 900,
         margin: 1,
         errorCorrectionLevel: 'H',
       });
     }
-  }, [booth.qr_token_booth]);
+  }, [booth.qr_booth]);
 
   return (
     <section
@@ -132,7 +145,14 @@ function HalamanPoster({ booth }: { booth: Poster }) {
         <p className="mt-2 text-xl text-slate-600">{booth.lokasi}</p>
       )}
 
-      <canvas ref={kanvas} className="mt-8 w-[12cm] max-w-[80%]" />
+      {booth.qr_booth ? (
+        <canvas ref={kanvas} className="mt-8 w-[12cm] max-w-[80%]" />
+      ) : (
+        <p className="mt-8 w-[12cm] max-w-[80%] rounded-2xl border-4 border-dashed border-slate-300 p-8 text-lg font-bold text-slate-500">
+          QR booth ini belum terbit. Buka boothnya dulu di halaman Kelola
+          Booth, lalu cetak ulang.
+        </p>
+      )}
 
       <p className="mt-6 text-2xl font-bold">Scan untuk membuka materi</p>
 

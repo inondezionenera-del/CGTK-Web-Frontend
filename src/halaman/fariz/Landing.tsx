@@ -130,7 +130,7 @@ export default function Landing() {
       <div className="relative overflow-hidden px-6 pt-4">
         <p
           aria-hidden
-          className="pointer-events-none absolute -left-6 top-6 select-none text-[22vw] font-black leading-[0.82] tracking-tight text-slate-900/[0.045] sm:text-[9rem]"
+          className="pointer-events-none absolute -left-6 top-6 select-none text-[clamp(2.5rem,13vw,6rem)] font-black leading-[0.86] tracking-tight text-slate-900/[0.04]"
         >
           Campus
           <br />

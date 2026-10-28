@@ -52,6 +52,15 @@ export default function MisiHalaman() {
       const pid = pengguna?.id ?? '';
       let belumSiap = false;
 
+      // Tanpa id, alamatnya jadi /missions/saya/ dengan garis miring
+      // menggantung dan server menjawab 404. Itu terjadi di sepersekian detik
+      // antara halaman dirender dan sesi selesai disinkronkan, dan muncul
+      // sebagai error di konsol tiap kali halaman ini dibuka.
+      if (!pid) {
+        const acara = await api.get<Acara[]>('/events', { signal }).catch(() => []);
+        return { misi: [], badge: [], acara: acara ?? [], belumSiap: false };
+      }
+
       // Modul ini milik layanan Python. Selama layanannya belum nyala, Worker
       // menjawab 503, dan itu bukan kesalahan yang perlu ditakuti peserta.
       const misi = await api

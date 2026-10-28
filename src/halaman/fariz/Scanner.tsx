@@ -24,6 +24,7 @@
 ============================================================================= */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import jsQR from 'jsqr';
 import { api, KesalahanApi, pesanDari } from '../../lib/api';
 import { useMuat } from '../../lib/kait';
@@ -313,8 +314,26 @@ export default function Scanner() {
 
   /* --- pilih sesi --------------------------------------------------------- */
   if (!sesiTerpilih) {
+    // Layar pemilih sesi memakai header sendiri.
+    //
+    // Kerangka aplikasi sengaja tidak memasang bar apa pun di /scan supaya
+    // layar kameranya bersih. Tapi layar pemilih BUKAN layar kamera, dan tanpa
+    // header dia jadi halaman tanpa logo, tanpa menu, dan tanpa satu pun jalan
+    // kembali: panitia yang membukanya terjebak sampai menutup tab.
     return (
-      <div className="mx-auto max-w-md space-y-4">
+      <div className="mx-auto max-w-md space-y-4 px-4 py-5">
+        <div className="flex items-center justify-between gap-3">
+          <Link to="/" aria-label="Beranda CGTK">
+            <img src="/logo-cgtk.png" alt="CGTK" className="h-8 w-auto" />
+          </Link>
+          <Link
+            to="/admin"
+            className="rounded-full bg-slate-100 px-4 py-2 text-xs font-black text-slate-700"
+          >
+            Kembali ke Panel
+          </Link>
+        </div>
+
         <h1 className="judul-tebal text-2xl">Pilih Sesi</h1>
         <p className="text-sm text-slate-500">
           Kamera hanya terbuka untuk sesi yang sedang berjalan.
@@ -335,8 +354,12 @@ export default function Scanner() {
                 <span className="block font-bold">{s.nama}</span>
                 <span className="block text-xs text-slate-500">{s.lokasi ?? '-'}</span>
               </span>
-              <span className="rounded-md bg-berhasil-600 px-2 py-1 text-[11px] font-extrabold uppercase text-white">
-                {s.status}
+              {/* Ditulis LIVE, bukan isi kolom status mentah. Daftar ini
+                  memang cuma berisi sesi yang sedang berjalan, dan lencana
+                  yang isinya ikut kolom akan tampil kosong kalau kolomnya
+                  suatu saat tidak ikut dikirim lagi. */}
+              <span className="shrink-0 rounded-md bg-berhasil-600 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-white">
+                Live
               </span>
             </button>
           ))
@@ -389,6 +412,18 @@ export default function Scanner() {
           {status.keadaan === 'selesai' &&
             `${status.diterima} terkirim, ${status.ditolak} ditolak`}
         </span>
+
+        {/* Jalan keluar.
+            Halaman scanner sengaja menutupi seluruh layar tanpa bar aplikasi,
+            dan itu berarti tidak ada satu pun tautan untuk kembali. Panitia
+            yang selesai memindai jadi terjebak dan satu-satunya jalan adalah
+            menutup tab. Ketahuan waktu halaman ini dibuka di browser. */}
+        <Link
+          to="/admin"
+          className="ml-2 shrink-0 rounded-full bg-white/15 px-4 py-1.5 text-xs font-black text-white"
+        >
+          Keluar
+        </Link>
       </div>
 
       {/* Kamera atau hasil */}
