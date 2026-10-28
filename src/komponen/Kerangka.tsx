@@ -50,6 +50,23 @@ interface Kelompok {
   isi: Tautan[];
 }
 
+/**
+ * Konteks yang sedang dilihat.
+ *
+ * Satu akun bisa punya lebih dari satu sisi sekaligus. Akun pengelola proyek
+ * misalnya peserta, alumni, DAN panitia. Peran saja tidak cukup untuk
+ * menentukan menu mana yang tampil, karena perannya cuma satu sementara
+ * sisinya tiga.
+ *
+ * Yang dipilih di sini TIDAK memberi hak apa pun. Dia cuma menentukan
+ * dashboard mana yang dituju logo dan tautan utama mana yang muncul di bar
+ * atas. Semua area yang boleh dibuka orang itu tetap ada di dalam menu, apa
+ * pun konteksnya, dan tiap endpoint tetap memeriksa izinnya sendiri di server.
+ */
+type Konteks = 'peserta' | 'alumni' | 'lo' | 'panitia';
+
+const KUNCI_KONTEKS = 'cgtk-konteks';
+
 /** Izin apa pun yang menandakan orang ini panitia. */
 const IZIN_PANITIA = [
   'TANDAI_LUNAS', 'SCAN_PRESENSI', 'SAKLAR_SESI', 'KELOLA_JADWAL',
@@ -141,29 +158,20 @@ const SEMUA: Kelompok[] = [
   },
 ];
 
-/**
- * Ke mana logo membawa orang ini.
- *
- * Tiap peran punya rumahnya sendiri. Panitia yang diarahkan ke dashboard
- * peserta cuma melihat halaman berisi QR dan XP yang tidak dia punya, dan
- * alumni yang diarahkan ke sana juga sama.
- */
-export function berandaPeran(peran: string | undefined, masuk: boolean): string {
-  if (!masuk) return '/';
-  switch (peran) {
-    case 'PESERTA': return '/dashboard';
-    case 'ALUMNI': return '/alumni';
-    case 'LO_PENDIDIKAN': return '/lo';
-    case undefined: return '/';
-    default: return '/admin';
-  }
-}
-
 export function Kerangka() {
   const { pengguna, masuk } = useSesi();
   const { pathname } = useLocation();
   const izin = useIzin(masuk);
   const [menuBuka, setMenuBuka] = useState(false);
+  const [konteksPilihan, setKonteksPilihan] = useState<Konteks | null>(() => {
+    try {
+      const k = localStorage.getItem(KUNCI_KONTEKS);
+      return k === 'peserta' || k === 'alumni' || k === 'lo' || k === 'panitia' ? k : null;
+    } catch {
+      // Mode penyamaran menolak localStorage. Bukan alasan berhenti.
+      return null;
+    }
+  });
 
   // Menu ditutup tiap kali halaman berpindah. Tanpa ini, menekan satu tautan
   // memindahkan halamannya tapi lapisannya tetap menutupi layar.
@@ -178,11 +186,59 @@ export function Kerangka() {
     pathname.startsWith('/p/');
 
   const peran = pengguna?.peran;
-  const beranda = berandaPeran(peran, masuk);
 
+  // Kapabilitas dari server kalau ada; kalau tidak, disimpulkan dari peran
+  // supaya akun lama yang token-nya belum memuatnya tetap jalan seperti biasa.
+  const kap = pengguna?.kapabilitas ?? {
+    peserta: peran === 'PESERTA',
+    alumni: peran === 'ALUMNI',
+    panitia: Boolean(peran) && !['PESERTA', 'ALUMNI', 'LO_PENDIDIKAN'].includes(peran ?? ''),
+  };
+  const bisaLo =
+    peran === 'LO_PENDIDIKAN' ||
+    peran === 'SUPER_ADMIN' ||
+    izin.includes('LIHAT_ALUMNI_DAMPINGAN');
+
+  const tersedia: Konteks[] = [
+    ...(kap.peserta ? (['peserta'] as const) : []),
+    ...(kap.alumni ? (['alumni'] as const) : []),
+    ...(bisaLo ? (['lo'] as const) : []),
+    ...(kap.panitia ? (['panitia'] as const) : []),
+  ];
+
+  // Konteks aktif: pilihan yang tersimpan kalau masih berlaku, kalau tidak
+  // yang paling sesuai dengan perannya, kalau tidak yang pertama tersedia.
+  const bawaan: Konteks =
+    peran === 'PESERTA' && kap.peserta ? 'peserta'
+      : peran === 'ALUMNI' && kap.alumni ? 'alumni'
+      : peran === 'LO_PENDIDIKAN' && bisaLo ? 'lo'
+      : (tersedia[0] ?? 'peserta');
+  const konteks: Konteks =
+    konteksPilihan && tersedia.includes(konteksPilihan) ? konteksPilihan : bawaan;
+
+  function gantiKonteks(k: Konteks) {
+    setKonteksPilihan(k);
+    try {
+      localStorage.setItem(KUNCI_KONTEKS, k);
+    } catch {
+      /* lihat di atas */
+    }
+  }
+
+  const beranda = masuk ? berandaKonteks(konteks) : '/';
+
+  // Menu disaring dengan KAPABILITAS, bukan peran.
+  //
+  // Dulu tautan peserta disaring dengan peran === 'PESERTA'. Akibatnya akun
+  // yang perannya SUPER_ADMIN tapi punya baris peserta tidak pernah melihat
+  // satu pun menu peserta, padahal server mengizinkannya.
   function boleh(t: Tautan): boolean {
     if (!masuk) return Boolean(t.publik);
-    if (t.peran) return t.peran.includes(peran ?? '');
+    if (t.peran) {
+      if (t.peran.includes('PESERTA')) return kap.peserta;
+      if (t.peran.includes('ALUMNI')) return kap.alumni;
+      return t.peran.includes(peran ?? '');
+    }
     if (t.izin) return peran === 'SUPER_ADMIN' || t.izin.some((i) => izin.includes(i));
     return true;
   }
@@ -193,7 +249,7 @@ export function Kerangka() {
 
   // Beberapa tautan utama di bar atas, sisanya di balik tombol Menu, supaya
   // bar-nya tetap muat di layar 360px tanpa berubah jadi strip yang digeser.
-  const utama = tautanUtama(peran, masuk, izin);
+  const utama = tautanUtama(konteks, masuk, izin, peran);
 
   return (
     <div className="min-h-dvh bg-white text-slate-900">
@@ -300,7 +356,11 @@ export function Kerangka() {
                   {pengguna?.nama ?? 'Belum masuk'}
                 </p>
                 <p className="truncate text-xs font-bold text-slate-500">
-                  {masuk ? labelPeran(peran) : 'Masuk untuk membuka fitur peserta'}
+                  {masuk
+                    ? tersedia.length > 1
+                      ? `${labelPeran(peran)} \u00b7 sedang melihat ${labelKonteks(konteks)}`
+                      : labelPeran(peran)
+                    : 'Masuk untuk membuka fitur peserta'}
                 </p>
               </div>
               <button
@@ -318,6 +378,34 @@ export function Kerangka() {
                 Dulu tugas ini dipegang logo. Sesudah logo berubah jadi
                 kontrol buka-tutup, jalan ke dashboard harus tetap ada dan
                 jelas, bukan hilang diam-diam di tengah daftar. */}
+            {/* Pemindah konteks. Muncul hanya kalau akunnya memang punya
+                lebih dari satu sisi, supaya peserta biasa tidak melihat
+                pilihan yang tidak ada artinya buat dia. */}
+            {masuk && tersedia.length > 1 && (
+              <div className="border-b border-slate-100 px-5 py-3">
+                <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+                  Lihat sebagai
+                </p>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {tersedia.map((k) => (
+                    <button
+                      key={k}
+                      type="button"
+                      aria-pressed={konteks === k}
+                      onClick={() => gantiKonteks(k)}
+                      className={`rounded-full px-3.5 py-1.5 text-xs font-black ${
+                        konteks === k
+                          ? 'tombol-utama'
+                          : 'bg-slate-100 text-slate-700'
+                      }`}
+                    >
+                      {labelKonteks(k)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {masuk && (
               <div className="px-5 pt-4">
                 <NavLink
@@ -325,7 +413,7 @@ export function Kerangka() {
                   end
                   className="tombol-utama flex items-center justify-center px-5 py-3 text-sm"
                 >
-                  Ke {labelBeranda(peran)}
+                  Ke {labelBeranda(konteks)}
                 </NavLink>
               </div>
             )}
@@ -391,12 +479,31 @@ export function Kerangka() {
   );
 }
 
-/** Nama rumah tiap peran, untuk tombol di dalam menu. */
-function labelBeranda(peran: string | undefined): string {
-  switch (peran) {
-    case 'PESERTA': return 'Dashboard';
-    case 'ALUMNI': return 'Beranda Alumni';
-    case 'LO_PENDIDIKAN': return 'Alumni Dampingan';
+/** Rumah tiap konteks. */
+function berandaKonteks(k: Konteks): string {
+  switch (k) {
+    case 'peserta': return '/dashboard';
+    case 'alumni': return '/alumni';
+    case 'lo': return '/lo';
+    default: return '/admin';
+  }
+}
+
+function labelKonteks(k: Konteks): string {
+  switch (k) {
+    case 'peserta': return 'Peserta';
+    case 'alumni': return 'Alumni';
+    case 'lo': return 'LO';
+    default: return 'Panitia';
+  }
+}
+
+/** Nama rumah tiap konteks, untuk tombol di dalam menu. */
+function labelBeranda(k: Konteks): string {
+  switch (k) {
+    case 'peserta': return 'Dashboard';
+    case 'alumni': return 'Beranda Alumni';
+    case 'lo': return 'Alumni Dampingan';
     default: return 'Dashboard Panitia';
   }
 }
@@ -415,9 +522,10 @@ function labelPeran(peran: string | undefined): string {
 }
 
 function tautanUtama(
-  peran: string | undefined,
+  konteks: Konteks,
   masuk: boolean,
   izin: string[],
+  peran: string | undefined,
 ): { ke: string; label: string }[] {
   if (!masuk) {
     return [
@@ -426,20 +534,20 @@ function tautanUtama(
       { ke: '/campuses', label: 'Kampus' },
     ];
   }
-  switch (peran) {
-    case 'PESERTA':
+  switch (konteks) {
+    case 'peserta':
       return [
         { ke: '/dashboard', label: 'Dashboard' },
         { ke: '/passport', label: 'Paspor' },
         { ke: '/schedule', label: 'Jadwal' },
       ];
-    case 'ALUMNI':
+    case 'alumni':
       return [
         { ke: '/alumni', label: 'Beranda' },
         { ke: '/alumni/pengunjung', label: 'Pengunjung' },
         { ke: '/scanner/booth', label: 'Scanner' },
       ];
-    case 'LO_PENDIDIKAN':
+    case 'lo':
       return [
         { ke: '/lo', label: 'Dampingan' },
         { ke: '/lo/statistik', label: 'Statistik' },

@@ -43,6 +43,20 @@ import type { ReactNode } from 'react';
 import { supabase } from './supabase';
 import { api, pesanDari } from './api';
 
+/**
+ * Apa saja yang BISA dilakukan akun ini, terpisah dari perannya.
+ *
+ * Peran menentukan izin administrasi. Sisi peserta dan alumni ditentukan oleh
+ * kepemilikan baris: wajibLunas cuma memeriksa ada baris participants,
+ * wajibAlumni cuma memeriksa ada baris representatives. Jadi satu akun bisa
+ * punya ketiganya sekaligus, dan ini yang memberi tahu layar soal itu.
+ */
+export interface Kapabilitas {
+  peserta: boolean;
+  alumni: boolean;
+  panitia: boolean;
+}
+
 export interface Pengguna {
   id: string;
   email?: string;
@@ -50,6 +64,7 @@ export interface Pengguna {
   foto_url?: string | null;
   peran: string;
   izin?: string[];
+  kapabilitas?: Kapabilitas;
   /** Disalin dari pembungkusnya supaya pemanggil lama tetap jalan. */
   arahkan_ke: string;
 }
@@ -63,6 +78,7 @@ interface JawabanSinkron {
     foto_url?: string | null;
     peran: string;
     izin?: string[];
+    kapabilitas?: Kapabilitas;
   } | null;
   arahkan_ke?: string;
   akun_baru?: boolean;
