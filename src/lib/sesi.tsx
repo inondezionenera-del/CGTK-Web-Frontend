@@ -117,7 +117,22 @@ export function PenyediaSesi({ children }: { children: ReactNode }) {
     }
 
     void sinkron();
-    const { data: langganan } = supabase.auth.onAuthStateChange(() => void sinkron());
+
+    // Hanya disinkronkan ulang kalau PENGGUNANYA berganti, bukan di setiap
+    // kejadian.
+    //
+    // onAuthStateChange juga menyala untuk TOKEN_REFRESHED, yang terjadi tiap
+    // jam dan setiap tab kembali difokus. Tiap kejadian dulu memicu satu
+    // POST /auth/sinkron penuh, padahal orangnya sama dan jawabannya sama.
+    // Di hari acara itu ratusan permintaan yang tidak mengubah apa pun, dan
+    // sempat membuat /auth/sinkron menembus batas lajunya sendiri.
+    let idTerakhir: string | null = null;
+    const { data: langganan } = supabase.auth.onAuthStateChange((kejadian, sesi) => {
+      const idBaru = sesi?.user?.id ?? null;
+      if (kejadian === 'TOKEN_REFRESHED' && idBaru === idTerakhir) return;
+      idTerakhir = idBaru;
+      void sinkron();
+    });
 
     return () => {
       hidup = false;

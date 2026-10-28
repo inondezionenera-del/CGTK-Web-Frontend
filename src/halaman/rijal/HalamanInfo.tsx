@@ -54,15 +54,22 @@ function pecah(teks: string): Bagian[] {
   return bagian.filter((b) => b.judul || b.isi.some((x) => x.trim()));
 }
 
-/** Tebal **begini** jadi <strong>. Sisanya dibiarkan apa adanya. */
-function tebal(baris: string) {
-  return baris.split(/(\*\*[^*]+\*\*)/g).map((potong, i) =>
-    potong.startsWith('**') && potong.endsWith('**') ? (
-      <strong key={i}>{potong.slice(2, -2)}</strong>
-    ) : (
-      <span key={i}>{potong}</span>
-    ),
-  );
+/**
+ * Tebal **begini** dan miring _begini_. Sisanya dibiarkan apa adanya.
+ *
+ * Miring ikut dikenali karena teks bawaan halaman ini memakainya, dan tanpa
+ * itu peserta melihat garis bawahnya mentah di layar.
+ */
+function gaya(baris: string) {
+  return baris.split(/(\*\*[^*]+\*\*|_[^_]+_)/g).map((potong, i) => {
+    if (potong.startsWith('**') && potong.endsWith('**')) {
+      return <strong key={i}>{potong.slice(2, -2)}</strong>;
+    }
+    if (potong.length > 2 && potong.startsWith('_') && potong.endsWith('_')) {
+      return <em key={i}>{potong.slice(1, -1)}</em>;
+    }
+    return <span key={i}>{potong}</span>;
+  });
 }
 
 function Isi({ baris }: { baris: string[] }) {
@@ -74,7 +81,7 @@ function Isi({ baris }: { baris: string[] }) {
     keluaran.push(
       <ul key={kunci} className="my-2 list-disc space-y-1 pl-5">
         {daftar.map((d, i) => (
-          <li key={i}>{tebal(d)}</li>
+          <li key={i}>{gaya(d)}</li>
         ))}
       </ul>,
     );
@@ -91,7 +98,7 @@ function Isi({ baris }: { baris: string[] }) {
     if (b.trim()) {
       keluaran.push(
         <p key={i} className="my-1.5">
-          {tebal(b)}
+          {gaya(b)}
         </p>,
       );
     }
@@ -121,6 +128,36 @@ export default function HalamanInfo() {
   }
 
   const bagian = pecah(data.isi ?? '');
+
+  // Isi bawaan halaman ini adalah penanda "belum diisi", bukan tulisan yang
+  // dimaksudkan untuk dibaca peserta. Dibersihkan dari tanda Markdown dulu,
+  // lalu kalau yang tersisa memang tidak berarti apa-apa, yang tampil keadaan
+  // kosong yang rapi. Menampilkan penanda itu apa adanya membuat halaman FAQ
+  // terlihat seperti halaman yang rusak.
+  const telanjang = (data.isi ?? '')
+    .replace(/[*_#>`-]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+  const belumDiisi = telanjang.length === 0 || telanjang === 'belum diisi.' || telanjang === 'belum diisi';
+
+  if (belumDiisi) {
+    return (
+      <div className="latar-air min-h-[calc(100dvh-4rem)] px-4 pb-14 pt-8">
+        <div className="mx-auto w-fit rounded-2xl bg-white/20 px-10 py-3 backdrop-blur-sm">
+          <h1 className="judul-stiker text-center text-[2.6rem] uppercase leading-none">
+            {data.judul}
+          </h1>
+        </div>
+        <div className="mx-auto mt-7 max-w-2xl">
+          <Kosong
+            judul="Isinya belum ditulis panitia"
+            keterangan="Halaman ini akan terisi sebelum acara dimulai."
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="latar-air min-h-[calc(100dvh-3.5rem)] px-4 pb-14 pt-8">
