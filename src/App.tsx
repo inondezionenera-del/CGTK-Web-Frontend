@@ -28,6 +28,11 @@ import { DashboardLO, StatistikLO } from './halaman/rijal/LO';
 import Kampus from './halaman/rijal/Kampus';
 import AdminSaklar from './halaman/rijal/AdminSaklar';
 import AdminLunas from './halaman/fariz/AdminLunas';
+import AdminPengaturan from './halaman/fariz/AdminPengaturan';
+import AdminBeranda from './halaman/fariz/AdminBeranda';
+import AdminPengumuman from './halaman/rijal/AdminPengumuman';
+import AdminHalaman from './halaman/rijal/AdminHalaman';
+import AdminPemenang from './halaman/haqi/AdminPemenang';
 import Masuk from './halaman/fariz/Masuk';
 import Daftar from './halaman/fariz/Daftar';
 import Bayar from './halaman/fariz/Bayar';
@@ -43,6 +48,13 @@ const Peringkat = lazy(() => import('./halaman/haqi/Peringkat'));
 const MisiHalaman = lazy(() => import('./halaman/haqi/Misi'));
 const Kuis = lazy(() => import('./halaman/haqi/Kuis'));
 const PosterBooth = lazy(() => import('./halaman/rijal/PosterBooth'));
+
+// ---------------- ALUMNI ----------------
+// Dimuat saat dibuka: yang membukanya cuma belasan orang, dan tidak ada
+// alasan lima ratus peserta ikut mengunduh halaman ini.
+const DashboardAlumni = lazy(() => import('./halaman/alumni/Dashboard'));
+const PengunjungAlumni = lazy(() => import('./halaman/alumni/Pengunjung'));
+const SertifikatAlumni = lazy(() => import('./halaman/alumni/Sertifikat'));
 
 export default function App() {
   return (
@@ -73,8 +85,17 @@ export default function App() {
         <Route path="/bayar" element={<WajibLogin><Bayar /></WajibLogin>} />
         <Route path="/dashboard" element={<WajibLogin><Dashboard /></WajibLogin>} />
         <Route path="/scan" element={<WajibLogin><Scanner /></WajibLogin>} />
-        <Route path="/admin" element={<WajibLogin><AdminLunas /></WajibLogin>} />
+        {/* ---------------- ALUMNI ---------------- */}
+        <Route path="/alumni" element={<WajibLogin><DashboardAlumni /></WajibLogin>} />
+        <Route path="/alumni/pengunjung" element={<WajibLogin><PengunjungAlumni /></WajibLogin>} />
+        <Route path="/alumni/sertifikat" element={<WajibLogin><SertifikatAlumni /></WajibLogin>} />
+
+        <Route path="/admin" element={<WajibLogin><AdminBeranda /></WajibLogin>} />
         <Route path="/admin/lunas" element={<WajibLogin><AdminLunas /></WajibLogin>} />
+        <Route path="/admin/pengaturan" element={<WajibLogin><AdminPengaturan /></WajibLogin>} />
+        <Route path="/admin/pengumuman" element={<WajibLogin><AdminPengumuman /></WajibLogin>} />
+        <Route path="/admin/halaman" element={<WajibLogin><AdminHalaman /></WajibLogin>} />
+        <Route path="/admin/pemenang" element={<WajibLogin><AdminPemenang /></WajibLogin>} />
 
         {/* ---------------- HAQI ---------------- */}
         <Route path="/quiz" element={<WajibLogin><Kuis /></WajibLogin>} />

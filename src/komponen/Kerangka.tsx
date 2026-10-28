@@ -34,10 +34,28 @@ const MENU_PESERTA: Menu[] = [
   { ke: '/passport', label: 'Paspor' },
 ];
 
+// Panitia diarahkan ke panel, bukan ke dashboard peserta. Dashboard peserta
+// menampilkan QR dan XP; panitia tidak punya keduanya, jadi di sana mereka
+// cuma melihat halaman yang setengah kosong.
 const MENU_PANITIA: Menu[] = [
-  { ke: '/', label: 'Beranda' },
-  { ke: '/dashboard', label: 'Dashboard' },
+  { ke: '/admin', label: 'Panel' },
+  { ke: '/schedule', label: 'Jadwal' },
   { ke: '/scan', label: 'Scanner' },
+];
+
+// Alumni memakai scanner booth, bukan scanner presensi. Dua alat yang berbeda:
+// yang satu mencatat kehadiran di sesi, yang satu memberi XP di meja booth.
+const MENU_ALUMNI: Menu[] = [
+  { ke: '/alumni', label: 'Beranda' },
+  { ke: '/alumni/pengunjung', label: 'Pengunjung' },
+  { ke: '/scanner/booth', label: 'Scanner' },
+];
+
+// LO mendampingi alumni di lapangan dan tidak memindai apa pun.
+const MENU_LO: Menu[] = [
+  { ke: '/lo', label: 'Alumni' },
+  { ke: '/lo/statistik', label: 'Statistik' },
+  { ke: '/schedule', label: 'Jadwal' },
 ];
 
 const MENU_TAMU: Menu[] = [
@@ -61,8 +79,16 @@ export function Kerangka() {
     ['/', '/masuk', '/daftar', '/bayar'].includes(pathname) ||
     pathname.startsWith('/p/');
 
-  const peserta = pengguna?.peran === 'PESERTA';
-  const menu = !masuk ? MENU_TAMU : peserta ? MENU_PESERTA : MENU_PANITIA;
+  const peran = pengguna?.peran;
+  const menu = !masuk
+    ? MENU_TAMU
+    : peran === 'PESERTA'
+      ? MENU_PESERTA
+      : peran === 'ALUMNI'
+        ? MENU_ALUMNI
+        : peran === 'LO_PENDIDIKAN'
+          ? MENU_LO
+          : MENU_PANITIA;
 
   return (
     <div className="min-h-dvh bg-white text-slate-900">
