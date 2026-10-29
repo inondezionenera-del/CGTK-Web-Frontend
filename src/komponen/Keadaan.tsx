@@ -18,10 +18,14 @@ export function Memuat({ pesan = 'Memuat...' }: { pesan?: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-20">
       {/* Dua cincin: satu diam sebagai jalur, satu berputar. Satu cincin saja
-          hampir tidak kelihatan di layar terang di luar ruangan. */}
-      <div className="relative h-12 w-12">
-        <div className="absolute inset-0 rounded-full border-4 border-slate-200" />
-        <div className="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-merek-magenta" />
+          hampir tidak kelihatan di layar terang di luar ruangan.
+
+          Garisnya ditipiskan dari 4px ke 3px dan cincin jalurnya dibuat lebih
+          pucat, supaya yang berputar jadi magenta merek yang jelas dan bukan
+          dua lingkaran tebal yang saling berebut perhatian. */}
+      <div className="relative h-11 w-11" role="status" aria-label={pesan}>
+        <div className="absolute inset-0 rounded-full border-[3px] border-slate-200/80" />
+        <div className="putar-tenang absolute inset-0 rounded-full border-[3px] border-transparent border-t-merek-magenta border-r-merek-magenta/35" />
       </div>
       <p className="text-sm font-bold text-slate-500">{pesan}</p>
     </div>

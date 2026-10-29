@@ -95,14 +95,14 @@ export default function Dashboard() {
       --------------------------------------------------------------- */}
       <header>
         <div className="relative">
-          <div className="h-40 w-full overflow-hidden rounded-[2rem] sm:h-48">
+          <div className="h-48 w-full overflow-hidden rounded-[2rem] sm:h-56">
             <img src="/latar-air.jpg" alt="" className="h-full w-full object-cover" />
           </div>
 
-          <div className="-mt-12 flex items-end gap-4 px-1">
-            <span className="h-24 w-24 shrink-0 rounded-full border-4 border-white bg-slate-200 sm:h-28 sm:w-28" />
+          <div className="-mt-14 flex items-end gap-3.5 px-4 sm:-mt-16 sm:gap-4 sm:px-5">
+            <span className="h-24 w-24 shrink-0 rounded-full border-4 border-white bg-slate-200 shadow-[0_8px_20px_-12px_rgba(15,42,70,0.7)] sm:h-36 sm:w-36" />
             <div className="min-w-0 flex-1 pb-1">
-              <h1 className="judul-tebal truncate text-2xl sm:text-3xl">
+              <h1 className="judul-tebal line-clamp-2 text-[1.6rem] leading-[1.05] sm:text-4xl">
                 {pengguna?.nama ?? 'Peserta'}
               </h1>
               <p className="truncate text-sm font-bold text-slate-700">
@@ -285,7 +285,7 @@ function KartuQr({ isi }: { isi: string }) {
 
   return (
     <section className="pt-4 text-center">
-      <p className="judul-tebal text-xl tracking-wide">YOUR QR CODE</p>
+      <p className="judul-tebal text-2xl tracking-wide sm:text-3xl">YOUR QR CODE</p>
       <p className="mt-1 text-xs text-slate-500">
         Tunjukkan ke panitia di pintu masuk dan ke alumni di booth
       </p>
@@ -293,7 +293,7 @@ function KartuQr({ isi }: { isi: string }) {
       {/* Bingkai abu-abu tebal dengan sudut membulat, seperti di mockup.
           Latarnya wajib putih polos: QR di atas warna atau gambar sering
           gagal dibaca kamera HP yang murah. */}
-      <div className="mt-4 inline-block rounded-[1.75rem] border-[6px] border-slate-300 bg-white p-4 shadow-[0_10px_24px_-14px_rgba(15,42,70,0.5)]">
+      <div className="mt-4 inline-block rounded-[1.75rem] border-[6px] border-slate-300 bg-white p-4 shadow-[7px_7px_0_-1px_rgba(15,42,70,0.18)]">
         <canvas ref={kanvas} />
       </div>
 

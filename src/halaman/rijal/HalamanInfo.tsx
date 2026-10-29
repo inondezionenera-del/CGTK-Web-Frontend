@@ -143,7 +143,7 @@ export default function HalamanInfo() {
 
   if (belumDiisi) {
     return (
-      <div className="latar-air min-h-[calc(100dvh-4rem)] px-4 pb-14 pt-8">
+      <div className="latar-air -mt-16 min-h-dvh px-4 pb-14 pt-[6rem]">
         <div className="mx-auto w-fit max-w-full rounded-2xl bg-white/20 px-6 py-3 backdrop-blur-sm sm:px-10">
           <h1 className="judul-stiker text-center text-[2.6rem] uppercase leading-none">
             {data.judul}
@@ -160,7 +160,7 @@ export default function HalamanInfo() {
   }
 
   return (
-    <div className="latar-air min-h-[calc(100dvh-3.5rem)] px-4 pb-14 pt-8">
+    <div className="latar-air -mt-16 min-h-dvh px-4 pb-14 pt-[6rem]">
       {/* Panel kaca buram di belakang judul, seperti di mockup. */}
       <div className="mx-auto w-fit max-w-full rounded-2xl bg-white/20 px-6 py-3 backdrop-blur-sm sm:px-10">
         <h1 className="judul-stiker text-center text-[2.6rem] uppercase leading-none">

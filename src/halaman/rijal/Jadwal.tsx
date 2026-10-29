@@ -1,24 +1,34 @@
 /* =============================================================================
    /schedule — timeline acara.
 
-   Dibuka berkali-kali oleh peserta di hari acara untuk tahu acara berikutnya
-   di mana. Dua aturan yang menentukan benarnya:
+   Mengikuti TIMELINE.png. Yang menentukan mirip atau tidaknya ada lima, dan
+   kelimanya diambil dari piksel TIMELINE ASSETS.png, bukan dikira-kira:
 
-   1. Badge LIVE dari `status`, TIDAK PERNAH dari jam. Jadwal di lapangan pasti
-      bergeser, telat dua puluh menit itu normal. Kalau LIVE dihitung dari jam,
-      badge-nya salah setiap kali jadwal bergeser dan peserta berjalan ke
+     latar air biru penuh layar      judul TIMELINE putih raksasa
+     kartu map arsip dengan lidah    garis tepi biru #0048ce yang meleset
+     tanggal acara merah plum        status merah dengan titik bulat
+
+   Dua aturan bisnis yang tidak boleh ikut berubah demi tampilan:
+
+   1. Badge status dari `status`, TIDAK PERNAH dari jam. Jadwal di lapangan
+      pasti bergeser, telat dua puluh menit itu normal. Kalau status dihitung
+      dari jam, dia salah setiap kali jadwal bergeser dan peserta berjalan ke
       ruangan yang salah. Jam tetap ditampilkan, tapi tidak menentukan apa pun.
 
-   2. Sesi berstatus DRAFT tidak ditampilkan sama sekali. Itu sesi yang masih
-      disiapkan Divisi Acara.
+   2. Sesi berstatus DRAFT tidak ditampilkan sama sekali.
 
-   Jumlah harinya tidak dikunci: tabnya dibuat dari tanggal yang benar-benar ada
-   di data. Kalau acaranya cuma sehari, tabnya tidak muncul.
+   Tombol SCAN ada di setiap kartu pada mockup. Di sini dia hanya muncul untuk
+   yang memang punya izin memindai. Peserta yang menekannya cuma akan sampai di
+   halaman yang menolak dia, dan tombol yang selalu menolak lebih buruk
+   daripada tombol yang tidak ada.
 ============================================================================= */
 
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { useMuat, useMuatUlangBerkala } from '../../lib/kait';
+import { useIzin } from '../../lib/izin';
+import { useSesi } from '../../lib/sesi';
 import { Memuat, PesanError, Kosong } from '../../komponen/Keadaan';
 import type { Acara, Sesi } from '../../types/api';
 
@@ -28,6 +38,11 @@ interface Isi {
 }
 
 export default function Jadwal() {
+  const { pengguna } = useSesi();
+  const izin = useIzin(Boolean(pengguna));
+  const bolehScan =
+    pengguna?.peran === 'SUPER_ADMIN' || izin.includes('SCAN_PRESENSI');
+
   const { data, memuat, error, muatUlang } = useMuat<Isi>(async (signal) => {
     const [acara, sesi] = await Promise.all([
       api.get<Acara[]>('/events', { signal }),
@@ -48,152 +63,202 @@ export default function Jadwal() {
   const [hariDipilih, setHariDipilih] = useState<string | null>(null);
   const aktif = hariDipilih ?? hari[0] ?? null;
 
-  if (memuat) return <Memuat />;
-  if (error) return <PesanError pesan={error} coba={() => muatUlang(false)} />;
-
   const acaraHari = (data?.acara ?? [])
     .filter((a) => !aktif || a.tanggal === aktif)
     .sort((a, b) => a.urutan - b.urutan);
 
   return (
-    <div className="mx-auto max-w-xl space-y-5 pb-10">
-      <header className="text-center">
-        <h1 className="judul-stiker text-[2.8rem] uppercase leading-none">
-          Timeline
-        </h1>
-        <p className="mt-2 text-sm text-slate-500">
-          Tanda LIVE menyala saat sesinya benar-benar dibuka panitia, bukan
-          saat jamnya tiba.
-        </p>
-      </header>
+    <div className="latar-air -mt-16 min-h-dvh px-4 pb-14 pt-[5.5rem]">
+      <div className="mx-auto max-w-xl">
+        <header className="text-center">
+          <h1 className="judul-air text-[2.9rem] uppercase leading-none sm:text-6xl">
+            Timeline
+          </h1>
+          <p className="mx-auto mt-3 max-w-sm text-sm font-semibold leading-snug text-white/90 [text-shadow:0_1px_3px_rgb(15_42_70_/_0.5)]">
+            Tanda sesi berlangsung menyala saat panitia benar-benar membukanya,
+            bukan saat jamnya tiba.
+          </p>
+        </header>
 
-      {/* Tab hari hanya muncul kalau acaranya memang lebih dari sehari. */}
-      {hari.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {hari.map((t, i) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setHariDipilih(t)}
-              className={`shrink-0 rounded-xl px-4 text-sm font-bold ${
-                aktif === t
-                  ? 'tombol-utama'
-                  : 'border border-slate-300 dark:border-slate-700'
-              }`}
-            >
-              Hari {i + 1}
-            </button>
-          ))}
+        {/* Tab hari hanya muncul kalau acaranya memang lebih dari sehari. */}
+        {hari.length > 1 && (
+          <div className="mt-5 flex justify-center gap-2 overflow-x-auto pb-1">
+            {hari.map((t, i) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setHariDipilih(t)}
+                aria-pressed={aktif === t}
+                className={`bisa-ditekan active:bisa-ditekan-aktif shrink-0 px-5 text-sm font-black ${
+                  aktif === t ? 'tombol-utama' : 'pil-nav text-jadwal-teks'
+                }`}
+              >
+                Hari {i + 1}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-7 space-y-8">
+          {memuat ? (
+            <Memuat />
+          ) : error ? (
+            <PesanError pesan={error} coba={() => muatUlang(false)} />
+          ) : acaraHari.length === 0 ? (
+            <Kosong
+              judul="Jadwal belum diisi"
+              keterangan="Divisi Acara belum memasukkan rangkaian acaranya."
+            />
+          ) : (
+            acaraHari.map((a, iAcara) => {
+              const sesiAcara = (data?.sesi ?? [])
+                // Dibaca dari dua tempat dengan sengaja: pernah terjadi
+                // event_id tidak ikut dikirim server dan seluruh halaman ini
+                // tampil kosong tanpa satu pun pesan galat.
+                .filter(
+                  (s) => (s.event_id ?? s.events?.id) === a.id && s.status !== 'DRAFT',
+                )
+                .sort((x, y) => x.urutan - y.urutan);
+
+              if (sesiAcara.length === 0) {
+                return (
+                  <KartuJadwal key={a.id} urutan={iAcara}>
+                    <BarisJudul nama={a.nama} tanggal={a.tanggal} />
+                    <p className="mt-3 text-sm font-semibold text-jadwal-teks/70">
+                      Sesinya belum dibuka Divisi Acara.
+                    </p>
+                  </KartuJadwal>
+                );
+              }
+
+              return sesiAcara.map((s, iSesi) => (
+                <KartuJadwal key={s.id} urutan={iAcara + iSesi}>
+                  <BarisJudul nama={s.nama} tanggal={a.tanggal} />
+
+                  <p className="mt-3 flex items-center gap-3 text-[0.95rem] text-jadwal-teks">
+                    <IkonTempat />
+                    <span className="min-w-0 truncate">
+                      {s.lokasi ?? 'Lokasi menyusul'}
+                    </span>
+                  </p>
+
+                  <p className="mt-2.5 flex items-center gap-3 text-[0.95rem] font-black text-jadwal-teks">
+                    <IkonJam />
+                    {jam(s.jam_mulai)}
+                    {s.jam_selesai ? ` - ${jam(s.jam_selesai)}` : ''}
+                  </p>
+
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    <Status status={s.status} />
+
+                    {s.saya_sudah_hadir ? (
+                      <span className="shrink-0 rounded-full bg-berhasil-50 px-4 py-2 text-xs font-black text-berhasil-700">
+                        &#10003; Hadir
+                      </span>
+                    ) : bolehScan ? (
+                      <Link
+                        to="/scan"
+                        className="pil-scan active:pil-scan-tekan shrink-0 px-6 py-2 text-base"
+                      >
+                        SCAN
+                      </Link>
+                    ) : null}
+                  </div>
+                </KartuJadwal>
+              ));
+            })
+          )}
         </div>
-      )}
+      </div>
+    </div>
+  );
+}
 
-      {acaraHari.length === 0 ? (
-        <Kosong
-          judul="Jadwal belum diisi"
-          keterangan="Divisi Acara belum memasukkan rangkaian acaranya."
-        />
-      ) : (
-        acaraHari.map((a) => {
-          const sesiAcara = (data?.sesi ?? [])
-            // Dibaca dari dua tempat dengan sengaja: pernah terjadi
-            // event_id tidak ikut dikirim server dan seluruh halaman ini
-            // tampil kosong tanpa satu pun pesan galat.
-            .filter((s) => (s.event_id ?? s.events?.id) === a.id && s.status !== 'DRAFT')
-            .sort((x, y) => x.urutan - y.urutan);
+/* -------------------------------------------------------------------------- */
 
-          return (
-            <section key={a.id} className="space-y-2">
-              <h2 className="text-xs font-black uppercase tracking-wider text-slate-400">
-                {a.nama}
-              </h2>
+/**
+ * Kartu map arsip.
+ *
+ * Lidahnya digambar sebagai kotak kecil di belakang kartu, bukan sebagai
+ * gambar: tingginya ikut kartu dan warnanya ikut token, jadi dia tidak akan
+ * meleset waktu warnanya diganti.
+ *
+ * Jeda masuknya dibatasi di 6 kartu. Tanpa batas, kartu kesembilan baru muncul
+ * sesudah hampir satu detik dan halamannya terasa lambat, bukan hidup.
+ */
+function KartuJadwal({
+  children,
+  urutan,
+}: {
+  children: React.ReactNode;
+  urutan: number;
+}) {
+  return (
+    <section
+      className="masuk-naik relative"
+      style={{ animationDelay: `${Math.min(urutan, 6) * 55}ms` }}
+    >
+      <span aria-hidden className="tab-jadwal" />
+      <div className="kartu-jadwal relative px-5 py-4">{children}</div>
+    </section>
+  );
+}
 
-              {sesiAcara.length === 0 ? (
-                <p className="rounded-xl bg-slate-50 p-3 text-xs text-slate-500 dark:bg-slate-900">
-                  Belum ada sesi yang dibuka di acara ini.
-                </p>
-              ) : (
-                <ul className="space-y-5">
-                  {sesiAcara.map((s) => (
-                    <li key={s.id} className="relative">
-                      {/* Lidah map di pojok kiri atas, seperti di mockup.
-                          Digambar dengan satu kotak membulat di belakang
-                          kartunya, bukan gambar terpisah. */}
-                      <span className="absolute -top-3 left-3 h-7 w-28 rounded-t-2xl bg-white ring-1 ring-merek-navy/25" />
-
-                      <div className="relative rounded-[1.5rem] bg-white px-4 py-4 shadow-[0_12px_26px_-18px_rgba(15,42,70,0.8)] ring-1 ring-merek-navy/25">
-                        <div className="flex items-baseline justify-between gap-3 border-b border-slate-200 pb-2">
-                          <h3 className="min-w-0 truncate text-xl font-black text-merek-navy">
-                            {s.nama}
-                          </h3>
-                        </div>
-
-                        <p className="mt-2.5 flex items-center gap-2.5 text-sm text-slate-700">
-                          <IkonTempat />
-                          <span className="min-w-0 truncate">
-                            {s.lokasi ?? 'Lokasi menyusul'}
-                          </span>
-                        </p>
-
-                        <p className="mt-2 flex items-center gap-2.5 text-sm font-bold text-merek-navy">
-                          <IkonJam />
-                          {jam(s.jam_mulai)}
-                        </p>
-
-                        <div className="mt-2.5 flex items-center justify-between gap-3">
-                          <span className="flex min-w-0 items-center gap-2.5">
-                            <span
-                              className={`h-4 w-4 shrink-0 rounded-full ${
-                                s.status === 'ACTIVE'
-                                  ? 'bg-berhasil-600'
-                                  : s.status === 'CLOSED'
-                                    ? 'bg-slate-400'
-                                    : 'bg-bahaya-600'
-                              }`}
-                            />
-                            <span
-                              className={`truncate text-sm font-black uppercase ${
-                                s.status === 'ACTIVE'
-                                  ? 'text-berhasil-700'
-                                  : s.status === 'CLOSED'
-                                    ? 'text-slate-500'
-                                    : 'text-bahaya-600'
-                              }`}
-                            >
-                              {s.status === 'ACTIVE'
-                                ? 'Sesi Berlangsung'
-                                : s.status === 'CLOSED'
-                                  ? 'Sesi Selesai'
-                                  : 'Sesi Belum Dimulai'}
-                            </span>
-                          </span>
-
-                          {/* Tombol SCAN di mockup selalu ada. Peserta yang
-                              menekannya akan mendapat halaman yang menolak
-                              dia, jadi di sini cuma muncul untuk yang memang
-                              boleh memindai. Peserta yang sudah presensi
-                              melihat tanda centang di tempat yang sama. */}
-                          {s.saya_sudah_hadir ? (
-                            <span className="shrink-0 rounded-full bg-berhasil-50 px-4 py-2 text-xs font-black text-berhasil-700">
-                              &#10003; Hadir
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          );
-        })
+function BarisJudul({ nama, tanggal }: { nama: string; tanggal: string | null }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 border-b border-jadwal-pemisah pb-2.5">
+      <h2 className="min-w-0 truncate text-2xl font-black text-jadwal-teks">
+        {nama}
+      </h2>
+      {tanggal && (
+        <span className="shrink-0 text-sm font-black text-jadwal-tanggal">
+          {tanggalPendek(tanggal)}
+        </span>
       )}
     </div>
   );
 }
 
+function Status({ status }: { status: Sesi['status'] }) {
+  const berjalan = status === 'ACTIVE';
+  const selesai = status === 'CLOSED';
+
+  return (
+    <span className="flex min-w-0 items-center gap-3">
+      <span
+        className={`h-4 w-4 shrink-0 rounded-full ${
+          berjalan ? 'bg-berhasil-600' : selesai ? 'bg-slate-400' : 'bg-jadwal-titik'
+        }`}
+      />
+      <span
+        className={`truncate text-sm font-black uppercase ${
+          berjalan
+            ? 'text-berhasil-700'
+            : selesai
+              ? 'text-slate-500'
+              : 'text-jadwal-merah'
+        }`}
+      >
+        {berjalan
+          ? 'Sesi Berlangsung'
+          : selesai
+            ? 'Sesi Selesai'
+            : 'Sesi Belum Dimulai'}
+      </span>
+    </span>
+  );
+}
+
 function IkonTempat() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="h-6 w-6 shrink-0 text-slate-500" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden
+      className="h-7 w-7 shrink-0 text-jadwal-teks/60"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+    >
       <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z" strokeLinejoin="round" />
       <path d="M10 21v-5h4v5" strokeLinejoin="round" />
     </svg>
@@ -202,7 +267,14 @@ function IkonTempat() {
 
 function IkonJam() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="h-6 w-6 shrink-0 text-slate-600" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden
+      className="h-7 w-7 shrink-0 text-jadwal-teks"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+    >
       <circle cx="12" cy="12" r="9" />
       <path d="M12 7v5.2l3.2 2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
@@ -219,5 +291,16 @@ function jam(iso: string | null): string {
     });
   } catch {
     return 'Jam menyusul';
+  }
+}
+
+/** 2026-10-26 -> 26 Okt. Dipakai di pojok kanan judul kartu. */
+function tanggalPendek(iso: string): string {
+  try {
+    const d = new Date(iso.length === 10 ? iso + 'T00:00:00' : iso);
+    if (Number.isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+  } catch {
+    return iso;
   }
 }

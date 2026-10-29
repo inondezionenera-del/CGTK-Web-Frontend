@@ -108,8 +108,13 @@ export default function Bayar() {
   }
 
   return (
-    <div className="latar-air min-h-[calc(100dvh-3.5rem)] px-4 py-8">
-      <div className="kartu mx-auto max-w-md px-6 pb-10 pt-8 text-center">
+    /* Kartunya ditengahkan tegak, bukan ditempel di atas.
+
+       Di layar 1440 kartu setinggi 400px yang dipaku di tepi atas membuat
+       dua pertiga layar jadi air kosong, dan halaman ini jadi terlihat
+       seperti belum selesai dikerjakan. */
+    <div className="latar-air -mt-16 flex min-h-dvh items-center justify-center px-4 pb-14 pt-24">
+      <div className="kartu masuk-naik mx-auto w-full max-w-md px-6 pb-10 pt-8 text-center sm:px-8">
         <h1 className="judul-tebal text-2xl">Bayar Disini</h1>
 
         {/* Harga ditulis paling besar sesudah judul, seperti di mockup.

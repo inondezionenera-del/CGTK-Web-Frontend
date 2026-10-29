@@ -62,6 +62,57 @@
   --color-bahaya-50: #fef2f2;
   --color-bahaya-600: #dc2626;
   --color-bahaya-700: #b91c1c;
+
+  /* ---------------------------------------------------------------------
+     Warna kartu jadwal, diambil langsung dari piksel TIMELINE ASSETS.png,
+     bukan dikira-kira dari layar.
+
+       teks dan ikon  #355075
+       tanggal        #803467
+       garis tepi     #0048ce
+       status merah   #ff383c, titiknya #ff0004
+       permukaan      #fafafa, pemisah #c3c3c3
+
+     Biru #0048ce ini BUKAN biru merek. Dia cuma dipakai sebagai garis tepi
+     kartu jadwal, dan sengaja diberi nama sendiri supaya tidak ada yang
+     memakainya sebagai warna tombol lalu bertabrakan dengan magenta.
+  --------------------------------------------------------------------- */
+  --color-jadwal-teks: #355075;
+  --color-jadwal-tanggal: #803467;
+  --color-jadwal-tepi: #0048ce;
+  --color-jadwal-merah: #ff383c;
+  --color-jadwal-titik: #ff0004;
+  --color-jadwal-permukaan: #fafafa;
+  --color-jadwal-pemisah: #c3c3c3;
+
+  /* ---------------------------------------------------------------------
+     Gerak.
+
+     Satu set durasi dan kurva untuk seluruh aplikasi. Sebelum ini tiap
+     halaman menulis duration-300 atau duration-150 sendiri-sendiri, dan
+     hasilnya satu layar bisa punya tiga kecepatan berbeda yang terasa
+     seperti aplikasi yang dirakit dari potongan.
+
+     Pendek semua. Animasi yang membuat orang menunggu bukan animasi yang
+     bagus, dan web ini dipakai sambil berdiri di antrean.
+  --------------------------------------------------------------------- */
+  --durasi-kilat: 120ms;
+  /* Perpindahan halaman. Dipisah dari --durasi-sedang karena yang ini
+     menentukan rasa navigasi, bukan rasa satu komponen, dan angkanya
+     disetel sendiri: cukup lama untuk terasa tenang, masih di bawah ambang
+     orang mulai merasa aplikasinya lambat. */
+  --durasi-halaman: 260ms;
+  /* Satu putaran spinner. 1s terasa gelisah; 1,4s terasa tenang tanpa
+     membuat orang mengira prosesnya macet. */
+  --durasi-putar: 1400ms;
+  --durasi-cepat: 180ms;
+  --durasi-sedang: 240ms;
+  --durasi-lambat: 320ms;
+
+  /* Keluar cepat, mendarat pelan. Dipakai untuk apa pun yang muncul. */
+  --gerak-masuk: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Simetris, untuk perubahan keadaan seperti hover dan aktif. */
+  --gerak-halus: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 html {
@@ -77,6 +128,32 @@ body {
   /* 16px minimum. Di bawah itu browser HP memperbesar sendiri waktu sebuah
      input difokus, dan tata letaknya ikut bergeser. */
   font-size: 16px;
+}
+
+/* -----------------------------------------------------------------------------
+   Cincin fokus yang sama di seluruh aplikasi.
+
+   Dipasang di :focus-visible, bukan :focus, supaya tidak muncul pada klik
+   tetikus tapi tetap muncul untuk yang memakai Tab. Tanpa ini, orang yang
+   menavigasi dengan papan ketik tidak punya satu pun petunjuk posisinya.
+----------------------------------------------------------------------------- */
+:focus-visible {
+  outline: 3px solid var(--color-merek-magenta);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+/* -----------------------------------------------------------------------------
+   Cincin fokus yang sama di seluruh aplikasi.
+
+   Dipasang di :focus-visible, bukan :focus, supaya tidak muncul pada klik
+   tetikus tapi tetap muncul untuk yang memakai Tab. Tanpa ini, orang yang
+   menavigasi dengan papan ketik tidak punya satu pun petunjuk posisinya.
+----------------------------------------------------------------------------- */
+:focus-visible {
+  outline: 3px solid var(--color-merek-magenta);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
 }
 
 /* Tombol minimal 44x44px. Dipakai sambil berdiri, terburu-buru, satu tangan. */
@@ -112,16 +189,80 @@ textarea::placeholder {
   border-radius: 2rem;
   background: white;
   box-shadow: 0 18px 40px -20px rgb(15 42 70 / 0.45);
+  transition:
+    transform var(--durasi-cepat) var(--gerak-halus),
+    box-shadow var(--durasi-cepat) var(--gerak-halus);
 }
 
-/* Latar air, dipotong dari mockup Dashboard. background-attachment sengaja
-   tidak fixed: di Safari iOS latar yang fixed ikut melompat saat halaman
-   digulir, dan itu lebih mengganggu daripada tekstur yang ikut bergerak. */
+/* Hanya untuk kartu yang benar-benar bisa diklik. Kartu yang bergerak padahal
+   tidak bisa ditekan cuma membuat orang mencoba menekannya. */
+@utility kartu-bisa-klik {
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 22px 46px -20px rgb(15 42 70 / 0.5);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   Latar air.
+
+   Berkasnya sekarang ubin yang dicerminkan, jadi dia boleh diulang ke segala
+   arah tanpa garis sambungan. Versi sebelumnya potongan langsung dari mockup
+   Dashboard, dan lingkaran abu-abu tempat foto peserta ikut terbawa di
+   dalamnya: di HP dia di bawah lipatan, tapi di layar 1440 dia muncul sebagai
+   gumpalan abu-abu di pojok kiri bawah setiap halaman berlatar air.
+
+   Pencerminannya cuma ke bawah, tidak ke samping. Dicerminkan mendatar,
+   hasilnya garis simetri tepat di tengah layar lebar, dan itu lebih terlihat
+   daripada masalah yang mau dihilangkan. Melebar tetap pakai cover.
+
+   background-attachment sengaja tidak fixed: di Safari iOS latar yang fixed
+   ikut melompat saat halaman digulir, dan itu lebih mengganggu daripada
+   tekstur yang ikut bergerak.
+----------------------------------------------------------------------------- */
+/**
+ * Latar air dengan kedalaman.
+ *
+ * Ubin airnya sendiri rata dari atas sampai bawah, dan di layar lebar itu
+ * terbaca sebagai wallpaper yang diulang, bukan sebagai air. Dua lapis
+ * gradasi ditumpuk di atasnya: satu cahaya lembut dari atas-kiri seperti
+ * matahari, satu lagi penggelapan di tepi bawah supaya kartu putih di
+ * tengahnya punya tempat mendarat.
+ *
+ * Keduanya gradasi CSS, bukan berkas gambar tambahan: tidak ada satu pun
+ * unduhan baru buat peserta yang memakai sinyal lapangan.
+ */
 @utility latar-air {
-  background-image: url('/latar-air.jpg');
-  background-size: cover;
-  background-position: center top;
-  background-repeat: repeat-y;
+  background-color: #35bfe8;
+  background-image:
+    radial-gradient(
+      120% 80% at 18% -10%,
+      rgb(255 255 255 / 0.42) 0%,
+      rgb(255 255 255 / 0.1) 38%,
+      transparent 70%
+    ),
+    linear-gradient(
+      to bottom,
+      transparent 55%,
+      rgb(10 72 110 / 0.18) 100%
+    ),
+    url('/latar-air.jpg');
+  background-size:
+    cover,
+    cover,
+    cover;
+  background-position:
+    center top,
+    center top,
+    center top;
+  background-repeat:
+    no-repeat,
+    no-repeat,
+    repeat-y;
 }
 
 /* Tulisan raksasa di layar hasil scan: putih dengan garis tepi gelap, seperti
@@ -146,12 +287,24 @@ textarea::placeholder {
 
 @utility isian {
   width: 100%;
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 0.875rem;
   background-color: #f1f3f5;
   padding: 0.75rem 1rem;
   font-size: 16px;
   color: var(--color-slate-900);
+  transition:
+    border-color var(--durasi-cepat) var(--gerak-halus),
+    background-color var(--durasi-cepat) var(--gerak-halus);
+
+  /* Fokus pada isian memakai garis tepi, bukan cincin di luar: di dalam
+     formulir yang padat, cincin luar saling bertabrakan dengan isian
+     tetangganya. */
+  &:focus {
+    outline: none;
+    border-color: var(--color-merek-magenta);
+    background-color: white;
+  }
 }
 
 @utility tombol-utama {
@@ -164,6 +317,23 @@ textarea::placeholder {
   font-weight: 800;
   border-radius: 999px;
   box-shadow: 0 10px 22px -12px rgb(160 38 110 / 0.9);
+  /* Umpan balik tekan dipasang di sini, satu kali, bukan ditambahkan
+     ke setiap tombol di setiap halaman. Hasilnya seluruh aplikasi menekan
+     dengan kecepatan yang sama. */
+  transition:
+    transform var(--durasi-kilat) var(--gerak-halus),
+    box-shadow var(--durasi-cepat) var(--gerak-halus),
+    filter var(--durasi-cepat) var(--gerak-halus);
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.05);
+    box-shadow: 0 14px 26px -12px rgb(160 38 110 / 0.95);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.975);
+    box-shadow: 0 6px 14px -10px rgb(160 38 110 / 0.9);
+  }
 }
 
 @utility tombol-kedua {
@@ -172,6 +342,242 @@ textarea::placeholder {
   font-weight: 800;
   border-radius: 999px;
   box-shadow: 0 10px 22px -12px rgb(242 116 58 / 0.9);
+  transition:
+    transform var(--durasi-kilat) var(--gerak-halus),
+    box-shadow var(--durasi-cepat) var(--gerak-halus),
+    filter var(--durasi-cepat) var(--gerak-halus);
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.05);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.975);
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   Kartu jadwal berbentuk map arsip, dari TIMELINE.png.
+
+   Bentuknya: permukaan hampir putih, dan di belakangnya persegi membulat biru
+   yang digeser ke kanan-bawah sehingga terlihat seperti garis tepi tebal yang
+   meleset. Tab kecil menyembul di kiri atas seperti map arsip.
+
+   Digambar dengan CSS, bukan dipotong jadi gambar: isinya teks yang panjangnya
+   berubah-ubah mengikuti nama acara, dan gambar statis akan terpotong.
+----------------------------------------------------------------------------- */
+@utility kartu-jadwal {
+  position: relative;
+  border-radius: 1.1rem;
+  background: var(--color-jadwal-permukaan);
+  box-shadow:
+    5px 5px 0 0 var(--color-jadwal-tepi),
+    0 10px 24px -14px rgb(15 42 70 / 0.45);
+}
+
+/* Tab map arsip. Dipasang di elemen pembungkus kartu. */
+@utility tab-jadwal {
+  position: absolute;
+  top: -0.85rem;
+  left: 0.6rem;
+  height: 1.1rem;
+  width: 5.5rem;
+  border-radius: 0.55rem 0.9rem 0 0;
+  background: var(--color-jadwal-permukaan);
+}
+
+/* Tombol SCAN di kartu jadwal: pil putih bergaris gelap dengan bayangan keras. */
+@utility pil-scan {
+  border-radius: 999px;
+  background: white;
+  color: #0b0b0b;
+  font-weight: 900;
+  border: 2px solid #111827;
+  box-shadow: 0 4px 0 -1px rgb(0 0 0 / 0.55);
+  transition:
+    transform var(--durasi-kilat) var(--gerak-halus),
+    box-shadow var(--durasi-kilat) var(--gerak-halus);
+}
+
+@utility pil-scan-tekan {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 -1px rgb(0 0 0 / 0.55);
+}
+
+/* -----------------------------------------------------------------------------
+   Plat judul buram di atas latar air, dari FAQ.png dan ABOUT.png.
+
+   Judul putih di atas air biru nyaris tidak terbaca tanpa alas. Di mockup
+   alasnya kaca buram, bukan kotak putih pekat.
+----------------------------------------------------------------------------- */
+@utility plat-judul {
+  border-radius: 1rem;
+  background: rgb(255 255 255 / 0.22);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* Judul raksasa putih di atas air, dari TIMELINE.png dan FAQ.png. */
+@utility judul-air {
+  font-weight: 900;
+  color: white;
+  letter-spacing: 0.01em;
+  text-shadow:
+    0 2px 0 rgb(15 42 70 / 0.25),
+    0 10px 24px rgb(15 42 70 / 0.35);
+}
+
+/* Kartu tanya jawab navy, dari FAQ.png. */
+@utility kartu-tanya {
+  border-radius: 0.9rem;
+  background: var(--color-merek-navy);
+  color: white;
+  box-shadow: 0 14px 30px -18px rgb(10 26 44 / 0.9);
+}
+
+/* Pil navigasi putih di atas latar air, dari TIMELINE.png dan FAQ.png. */
+@utility pil-nav {
+  border-radius: 999px;
+  background: white;
+  box-shadow: 0 6px 14px -8px rgb(15 42 70 / 0.5);
+}
+
+/* -----------------------------------------------------------------------------
+   Perpindahan halaman.
+
+   Sangat pendek dan tanpa pergeseran tata letak: cuma kabur masuk dengan
+   naik 6 piksel. Transisi halaman yang panjang membuat navigasi terasa
+   lambat, dan di sini orang berpindah halaman sambil berjalan.
+----------------------------------------------------------------------------- */
+@keyframes masuk-halaman {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility masuk-halaman {
+  animation: masuk-halaman var(--durasi-halaman) var(--gerak-masuk) both;
+}
+
+/* -----------------------------------------------------------------------------
+   Putaran spinner.
+
+   animate-spin bawaan Tailwind satu putaran per detik, dan di layar kecil
+   itu terbaca seperti aplikasi yang panik. Yang dipakai di sini lebih
+   lambat, tetap linear supaya tidak tersendat di tiap putaran.
+
+   Ini cuma mengubah kecepatan gambarnya. Tidak ada jeda buatan di mana pun:
+   begitu datanya sampai, spinnernya hilang saat itu juga.
+----------------------------------------------------------------------------- */
+@keyframes putar-tenang {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@utility putar-tenang {
+  animation: putar-tenang var(--durasi-putar) linear infinite;
+}
+
+/* -----------------------------------------------------------------------------
+   Popup yang tumbuh dari tombolnya.
+
+   transform-origin di pojok kanan atas, yaitu titik tepat di bawah foto
+   profil yang membukanya. Itu satu-satunya hal yang membedakan popup yang
+   terasa keluar DARI tombol dengan popup yang terasa muncul entah dari mana.
+
+   Skalanya cuma dari 0,94: lebih kecil dari itu dan tulisannya sempat terlihat
+   buram sepersekian detik di layar HP.
+----------------------------------------------------------------------------- */
+@keyframes tumbuh-dari-atas {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translate3d(0, -6px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility tumbuh-dari-atas {
+  transform-origin: top right;
+  animation: tumbuh-dari-atas var(--durasi-cepat) var(--gerak-masuk) both;
+}
+
+/* -----------------------------------------------------------------------------
+   Menu geser masuk dari KIRI, lapisan gelapnya kabur masuk.
+
+   Dari kiri, bukan kanan, karena trisula yang membukanya ada di kiri. Panel
+   yang muncul di sisi berlawanan dari tombolnya membuat mata harus berpindah
+   melintasi layar setiap kali menu dibuka.
+----------------------------------------------------------------------------- */
+@keyframes geser-kiri {
+  from {
+    transform: translate3d(-100%, 0, 0);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@utility geser-kiri {
+  animation: geser-kiri var(--durasi-sedang) var(--gerak-masuk) both;
+}
+
+@keyframes kabur-masuk {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@utility kabur-masuk {
+  animation: kabur-masuk var(--durasi-cepat) var(--gerak-halus) both;
+}
+
+/* -----------------------------------------------------------------------------
+   Masuknya elemen ke layar.
+
+   Dipakai untuk kartu yang datang berurutan di dashboard dan jadwal. Hanya
+   transform dan opacity, jadi tidak memaksa browser menghitung ulang tata
+   letak di tengah animasi.
+
+   Jaraknya kecil dengan sengaja. Kartu yang terbang dari bawah layar terlihat
+   mengesankan sekali, lalu menyebalkan sejak kali kedua halamannya dibuka.
+----------------------------------------------------------------------------- */
+@keyframes masuk-naik {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility masuk-naik {
+  animation: masuk-naik var(--durasi-sedang) var(--gerak-masuk) both;
+}
+
+/* Tekanan tombol. Terasa di jari, tidak terlihat mencolok di mata. */
+@utility bisa-ditekan {
+  transition:
+    transform var(--durasi-kilat) var(--gerak-halus),
+    box-shadow var(--durasi-cepat) var(--gerak-halus),
+    opacity var(--durasi-cepat) var(--gerak-halus);
+}
+
+@utility bisa-ditekan-aktif {
+  transform: scale(0.97);
 }
 
 /* Hormati pengguna yang mematikan animasi di setelan HP-nya. */

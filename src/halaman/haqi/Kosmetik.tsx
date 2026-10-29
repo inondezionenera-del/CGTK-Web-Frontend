@@ -163,66 +163,92 @@ export default function Kosmetik() {
 
 /* -------------------------------------------------------------------------- */
 
-/** Contoh tampilan, digambar dari kolom nilai. Tidak mengunduh gambar apa pun. */
+/**
+ * Contoh tampilan, digambar dari kolom nilai. Tidak mengunduh gambar apa pun.
+ *
+ * YANG TERKUNCI TETAP DIGAMBAR UTUH.
+ *
+ * Versi sebelumnya mengganti semua yang terkunci dengan kotak abu-abu. Di
+ * Level 1 hampir semuanya terkunci, jadi seluruh halaman ini jadi dua belas
+ * kotak abu-abu kosong, dan tidak ada satu pun alasan untuk mengejarnya:
+ * orang tidak tahu Bingkai Emas itu seperti apa, jadi dia tidak menginginkannya.
+ *
+ * Sekarang warnanya ditampilkan apa adanya, cuma diredupkan sedikit dan diberi
+ * gembok. Yang menentukan boleh atau tidaknya dipakai tetap server, dan tombol
+ * terkunci tetap disabled; ini murni soal yang terlihat.
+ */
 function Contoh({ kosmetik: k }: { kosmetik: Kosmetik }) {
   const terkunci = !k.terbuka;
+  const redup = terkunci ? 'opacity-80' : '';
 
   if (k.tipe === 'WARNA_NAMA') {
     return (
-      <span
-        className={`mx-auto block rounded-xl px-2 py-3 text-base font-black ${
-          terkunci ? 'bg-slate-100 text-slate-400' : 'bg-slate-900'
-        }`}
-        style={terkunci ? undefined : { color: k.nilai ?? '#fff' }}
-      >
-        Nama
+      <span className="relative mx-auto block">
+        <span
+          className={`block rounded-xl bg-slate-900 px-2 py-3 text-base font-black ${redup}`}
+          style={{ color: k.nilai ?? '#fff' }}
+        >
+          Nama
+        </span>
+        {terkunci && <Gembok />}
       </span>
     );
   }
 
   if (k.tipe === 'BINGKAI') {
     return (
-      <span
-        className={`mx-auto block h-14 w-14 rounded-full border-4 ${
-          terkunci ? 'border-slate-200 bg-slate-100' : 'bg-slate-200'
-        }`}
-        style={
-          terkunci
-            ? undefined
-            : {
-                borderColor:
-                  k.nilai === 'emas'
-                    ? '#d4af37'
-                    : k.nilai === 'ukir'
-                      ? '#a0266e'
-                      : k.nilai === 'garis'
-                        ? '#1b3a5c'
-                        : '#cbd5e1',
-                borderStyle: k.nilai === 'ukir' ? 'double' : 'solid',
-              }
-        }
-      />
+      <span className="relative mx-auto block h-14 w-14">
+        <span
+          className={`block h-full w-full rounded-full border-4 bg-slate-200 ${redup}`}
+          style={{
+            borderColor:
+              k.nilai === 'emas'
+                ? '#d4af37'
+                : k.nilai === 'ukir'
+                  ? '#a0266e'
+                  : k.nilai === 'garis'
+                    ? '#1b3a5c'
+                    : '#cbd5e1',
+            borderStyle: k.nilai === 'ukir' ? 'double' : 'solid',
+          }}
+        />
+        {terkunci && <Gembok />}
+      </span>
     );
   }
 
   // BACKGROUND dan sisanya.
   return (
+    <span className="relative mx-auto block h-14 w-full">
+      <span
+        className={`block h-full w-full rounded-xl ${redup}`}
+        style={{
+          backgroundImage:
+            k.nilai === 'juara'
+              ? 'linear-gradient(135deg,#d4af37,#f2743a)'
+              : k.nilai === 'senja'
+                ? 'linear-gradient(135deg,#f2743a,#a0266e)'
+                : k.nilai === 'gelap'
+                  ? 'linear-gradient(135deg,#1b3a5c,#0f2a46)'
+                  : 'linear-gradient(135deg,#e2e8f0,#f8fafc)',
+        }}
+      />
+      {terkunci && <Gembok />}
+    </span>
+  );
+}
+
+/** Gembok kecil di pojok, penanda belum terbuka. */
+function Gembok() {
+  return (
     <span
-      className={`mx-auto block h-14 w-full rounded-xl ${terkunci ? 'bg-slate-100' : ''}`}
-      style={
-        terkunci
-          ? undefined
-          : {
-              backgroundImage:
-                k.nilai === 'juara'
-                  ? 'linear-gradient(135deg,#d4af37,#f2743a)'
-                  : k.nilai === 'senja'
-                    ? 'linear-gradient(135deg,#f2743a,#a0266e)'
-                    : k.nilai === 'gelap'
-                      ? 'linear-gradient(135deg,#1b3a5c,#0f2a46)'
-                      : 'linear-gradient(135deg,#e2e8f0,#f8fafc)',
-            }
-      }
-    />
+      aria-hidden
+      className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-white text-slate-500 shadow-[0_2px_6px_rgba(15,42,70,0.25)]"
+    >
+      <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.4">
+        <rect x="5" y="11" width="14" height="9" rx="2" />
+        <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+      </svg>
+    </span>
   );
 }

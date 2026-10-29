@@ -107,16 +107,60 @@ export default function Profil() {
         </p>
       </header>
 
-      {/* Identitas akun. Dari Google, tidak bisa diubah di sini. */}
+      {/* ------------------------------------------------------------------
+          Identitas akun.
+
+          Fotonya ikut ditampilkan, bukan cuma nama dan email. Sebelum ini
+          kartu ini seluruhnya teks, dan halaman bernama "Profil Saya" tanpa
+          satu pun wajah di dalamnya terbaca seperti halaman yang belum jadi.
+
+          Fotonya datang dari akun Google dan memang belum bisa diganti dari
+          sini: tidak ada tempat penyimpanan berkas di proyek ini, jadi tidak
+          ada ke mana unggahan akan disimpan. Yang bisa dilakukan sekarang
+          dijelaskan apa adanya, lengkap dengan tautan langsung ke tempat
+          mengubahnya.
+      ------------------------------------------------------------------ */}
       <section className="kartu p-5 ring-1 ring-slate-200">
         <h2 className="text-xs font-black uppercase tracking-wider text-slate-400">
           Akun
         </h2>
-        <p className="mt-2 text-lg font-black">{pengguna?.nama ?? '-'}</p>
-        <p className="text-sm text-slate-600">{pengguna?.email ?? ''}</p>
-        <p className="mt-2 text-xs leading-relaxed text-slate-500">
-          Nama dan email datang dari akun Google-mu dan tidak bisa diubah di
-          sini. Kalau salah, perbaiki di akun Google lalu masuk ulang.
+
+        <div className="mt-3 flex items-center gap-4">
+          <span className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-200 ring-4 ring-white shadow-[0_6px_18px_-8px_rgba(15,42,70,0.6)]">
+            {pengguna?.foto_url ? (
+              <img
+                src={pengguna.foto_url}
+                alt=""
+                referrerPolicy="no-referrer"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span aria-hidden className="text-xl font-black text-slate-500">
+                {inisialNama(pengguna?.nama)}
+              </span>
+            )}
+          </span>
+
+          <div className="min-w-0">
+            <p className="truncate text-lg font-black">{pengguna?.nama ?? '-'}</p>
+            <p className="truncate text-sm text-slate-600">
+              {pengguna?.email ?? ''}
+            </p>
+          </div>
+        </div>
+
+        <p className="mt-3 text-xs leading-relaxed text-slate-500">
+          Foto, nama, dan email datang dari akun Google-mu. Untuk menggantinya,
+          ubah di{' '}
+          <a
+            href="https://myaccount.google.com/personal-info"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bold text-merek-magenta underline"
+          >
+            akun Google
+          </a>{' '}
+          lalu keluar dan masuk lagi di sini.
         </p>
       </section>
 
@@ -436,4 +480,12 @@ function LencanaStatus({ status }: { status?: string }) {
       {t.teks}
     </span>
   );
+}
+
+/** Dua huruf untuk foto yang belum ada, sama seperti di bar atas. */
+function inisialNama(nama: string | undefined): string {
+  const bagian = (nama ?? '').trim().split(/\s+/).filter(Boolean);
+  if (bagian.length === 0) return '';
+  if (bagian.length === 1) return (bagian[0] ?? '').slice(0, 2).toUpperCase();
+  return ((bagian[0]?.[0] ?? '') + (bagian[1]?.[0] ?? '')).toUpperCase();
 }

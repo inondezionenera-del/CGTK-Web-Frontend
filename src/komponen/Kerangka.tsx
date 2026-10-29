@@ -28,7 +28,7 @@
    adalah beban.
 ============================================================================= */
 
-import { useEffect, useState } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useSesi } from '../lib/sesi';
 import { useIzin, lupakanIzin } from '../lib/izin';
@@ -163,6 +163,8 @@ export function Kerangka() {
   const { pathname } = useLocation();
   const izin = useIzin(masuk);
   const [menuBuka, setMenuBuka] = useState(false);
+  const [akunBuka, setAkunBuka] = useState(false);
+  const kotakAkun = useRef<HTMLDivElement>(null);
   const [konteksPilihan, setKonteksPilihan] = useState<Konteks | null>(() => {
     try {
       const k = localStorage.getItem(KUNCI_KONTEKS);
@@ -177,13 +179,44 @@ export function Kerangka() {
   // memindahkan halamannya tapi lapisannya tetap menutupi layar.
   useEffect(() => {
     setMenuBuka(false);
+    setAkunBuka(false);
   }, [pathname]);
+
+  /**
+   * Popup akun tertutup kalau orang menekan di luarnya atau menekan Escape.
+   *
+   * Dipasang di dokumen, bukan lapisan gelap setengah layar: popup sekecil ini
+   * tidak boleh menggelapkan halaman di belakangnya, karena dia bukan dialog
+   * yang menuntut keputusan.
+   */
+  useEffect(() => {
+    if (!akunBuka) return;
+
+    function diLuar(e: MouseEvent) {
+      if (!kotakAkun.current?.contains(e.target as Node)) setAkunBuka(false);
+    }
+    function tekan(e: KeyboardEvent) {
+      if (e.key === 'Escape') setAkunBuka(false);
+    }
+
+    document.addEventListener('mousedown', diLuar);
+    document.addEventListener('keydown', tekan);
+    return () => {
+      document.removeEventListener('mousedown', diLuar);
+      document.removeEventListener('keydown', tekan);
+    };
+  }, [akunBuka]);
 
   if (pathname.startsWith('/scan')) return <Outlet />;
 
   const penuh =
-    ['/', '/masuk', '/daftar', '/bayar'].includes(pathname) ||
+    ['/', '/masuk', '/daftar', '/bayar', '/schedule'].includes(pathname) ||
     pathname.startsWith('/p/');
+
+  // Halaman berlatar air biru. Di mockup, header di halaman-halaman ini
+  // TIDAK punya bar putih: dia mengambang di atas airnya, dan tautannya
+  // berbentuk pil putih supaya tetap terbaca.
+  const diAtasAir = pathname === '/schedule' || pathname.startsWith('/p/');
 
   const peran = pengguna?.peran;
 
@@ -262,31 +295,35 @@ export function Kerangka() {
 
           Ketahuan waktu pengujian browser: klik kedua pada trisula ditolak
           dengan "intercepts pointer events". */}
-      <header className="sticky top-0 z-50 border-b border-slate-100 bg-white">
-        <div className="mx-auto flex h-16 max-w-5xl items-center gap-3 px-4">
+      <header
+        className={`sticky top-0 z-50 ${
+          diAtasAir ? 'bg-transparent' : 'border-b border-slate-100 bg-white'
+        }`}
+      >
+        <div className="mx-auto flex h-16 max-w-5xl items-center gap-1.5 px-3 sm:gap-3 sm:px-4">
           {/* ----------------------------------------------------------------
-              Trisula sebagai kontrol sidebar.
+              Trisula sendirian di kiri, membuka menu navigasi.
+
+              Dulu lingkaran foto ikut di sebelahnya dan keduanya membuka menu
+              yang sama. Dua tombol bersebelahan dengan akibat yang persis sama
+              cuma membuat orang menebak bedanya. Sekarang tugasnya dipisah:
+              kiri untuk pindah halaman, kanan untuk urusan akun.
 
               Trisula di aset aslinya mengarah ke samping. Diputar seperempat
               putaran dia mengarah ke atas, dan itu justru posisi alami sebuah
               trisula, jadi bentuk dan identitasnya tidak dikorbankan untuk
-              animasi. Terbuka mengarah ke atas, tertutup kembali ke samping.
-
-              Tombol, bukan tautan. Menekannya membuka dan menutup menu, bukan
-              memindahkan halaman. Jalan ke dashboard tetap ada dan jelas:
-              tautan pertama di bar atas, dan satu bagian tersendiri di dalam
-              menu.
-
-              aria-expanded dan aria-controls dipasang supaya pembaca layar
-              tahu ini kontrol buka-tutup dan tahu apa yang dikendalikannya.
+              animasi.
           ---------------------------------------------------------------- */}
           <button
             type="button"
-            onClick={() => setMenuBuka((v) => !v)}
+            onClick={() => {
+              setMenuBuka((v) => !v);
+              setAkunBuka(false);
+            }}
             aria-label={menuBuka ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
             aria-expanded={menuBuka}
             aria-controls="menu-navigasi"
-            className="-ml-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-merek-magenta"
+            className="bisa-ditekan active:bisa-ditekan-aktif -ml-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
           >
             <img
               src="/trisula.png"
@@ -297,50 +334,66 @@ export function Kerangka() {
             />
           </button>
 
-          <nav className="ml-auto flex items-center gap-4 sm:gap-7">
+          {/* ----------------------------------------------------------------
+              Tautan utama TAMPIL DI HP.
+
+              Sebelum ini ketiganya `hidden sm:block`, jadi justru hilang pada
+              lebar yang persis sama dengan mockup-nya: seluruh PNG Figma
+              berukuran 720x1600, yaitu ponsel. Yang dilihat peserta di HP cuma
+              trisula dan tombol Menu, dan itu sebabnya hasilnya terasa tidak
+              seperti gambar.
+          ---------------------------------------------------------------- */}
+          <nav className="ml-auto flex items-center gap-1.5 sm:gap-3">
             {utama.map((m) => (
               <NavLink
                 key={m.ke}
                 to={m.ke}
                 end={m.ke === '/'}
                 className={({ isActive }) =>
-                  `hidden text-sm font-bold sm:block ${
-                    isActive ? 'text-merek-magenta' : 'text-slate-900'
-                  }`
+                  [
+                    'bisa-ditekan active:bisa-ditekan-aktif whitespace-nowrap px-2.5 py-1.5 text-[0.78rem] font-bold sm:px-4 sm:text-sm',
+                    diAtasAir ? 'pil-nav' : 'rounded-full',
+                    isActive
+                      ? diAtasAir
+                        ? 'text-merek-magenta'
+                        : 'bg-utama-50 text-merek-magenta'
+                      : diAtasAir
+                        ? 'text-jadwal-teks'
+                        : 'text-slate-900 hover:bg-slate-100',
+                  ].join(' ')
                 }
               >
                 {m.label}
               </NavLink>
             ))}
 
-            {!masuk && (
-              <Link to="/masuk" className="tombol-utama px-5 py-2 text-sm">
+            {masuk ? (
+              <MenuAkun
+                ref={kotakAkun}
+                buka={akunBuka}
+                setBuka={setAkunBuka}
+                tutupNavigasi={() => setMenuBuka(false)}
+                nama={pengguna?.nama}
+                email={pengguna?.email}
+                foto={pengguna?.foto_url ?? null}
+                label={labelPeran(peran)}
+              />
+            ) : (
+              <Link
+                to="/masuk"
+                className="tombol-utama bisa-ditekan active:bisa-ditekan-aktif whitespace-nowrap px-4 py-2 text-[0.8rem] sm:px-5 sm:text-sm"
+              >
                 Masuk
               </Link>
             )}
 
-            {/* Tulisan Menu dipertahankan di samping trisula.
-
-                Ikon sendirian jarang dikenali sebagai kontrol oleh orang yang
-                baru pertama membuka web ini, dan panitia di hari acara tidak
-                punya waktu menebak. Dua-duanya membuka menu yang sama. */}
-            <button
-              type="button"
-              onClick={() => setMenuBuka((v) => !v)}
-              aria-label={menuBuka ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
-              aria-expanded={menuBuka}
-              aria-controls="menu-navigasi"
-              className="flex h-10 items-center rounded-full bg-slate-100 px-4 text-sm font-black"
-            >
-              Menu
-            </button>
           </nav>
         </div>
       </header>
 
       {menuBuka && (
         <div
-          className="fixed inset-x-0 bottom-0 top-16 z-40 bg-black/50"
+          className="kabur-masuk fixed inset-x-0 bottom-0 top-16 z-40 bg-black/50"
           onClick={() => setMenuBuka(false)}
         >
           <div
@@ -348,7 +401,7 @@ export function Kerangka() {
             role="dialog"
             aria-label="Menu navigasi"
             onClick={(e) => e.stopPropagation()}
-            className="ml-auto flex h-full w-[min(22rem,88vw)] flex-col bg-white shadow-2xl"
+            className="geser-kiri mr-auto flex h-full w-[min(22rem,88vw)] flex-col bg-white shadow-2xl"
           >
             <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
               <div className="min-w-0">
@@ -472,10 +525,165 @@ export function Kerangka() {
         </div>
       )}
 
-      <main className={penuh ? '' : 'mx-auto max-w-5xl px-4 py-5'}>
+      {/* key={pathname} membuat React membuang dan membuat ulang pembungkus
+          ini tiap pindah halaman, jadi animasinya jalan lagi setiap kali.
+          Tanpa key, animasinya cuma terjadi sekali seumur sesi. */}
+      <main
+        key={pathname}
+        className={`masuk-halaman ${penuh ? '' : 'mx-auto max-w-5xl px-4 py-5'}`}
+      >
         <Outlet />
       </main>
     </div>
+  );
+}
+
+/**
+ * Dua huruf pertama dari nama, untuk avatar yang tidak punya foto.
+ *
+ * Dua kata pertama diambil inisialnya; satu kata diambil dua hurufnya. Kalau
+ * namanya belum ada sama sekali, lingkarannya dibiarkan polos daripada diisi
+ * tanda tanya yang terbaca seperti kesalahan.
+ */
+function inisial(nama: string | undefined): string {
+  const bagian = (nama ?? '').trim().split(/\s+/).filter(Boolean);
+  if (bagian.length === 0) return '';
+  if (bagian.length === 1) return (bagian[0] ?? '').slice(0, 2).toUpperCase();
+  return ((bagian[0]?.[0] ?? '') + (bagian[1]?.[0] ?? '')).toUpperCase();
+}
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Foto profil di kanan atas, dan popup kecil yang menempel di bawahnya.
+ *
+ * Bukan menu navigasi. Yang ada di sini cuma urusan akun: siapa yang sedang
+ * masuk, jalan ke halaman profilnya, dan keluar. Pindah halaman tetap lewat
+ * trisula di kiri.
+ *
+ * Titik tumpu animasinya di pojok kanan atas kotak, tepat di bawah fotonya,
+ * jadi popupnya terlihat tumbuh DARI foto itu, bukan muncul entah dari mana.
+ */
+const MenuAkun = forwardRef<
+  HTMLDivElement,
+  {
+    buka: boolean;
+    setBuka: (v: boolean | ((x: boolean) => boolean)) => void;
+    tutupNavigasi: () => void;
+    nama: string | undefined;
+    email: string | undefined;
+    foto: string | null;
+    label: string;
+  }
+>(function MenuAkun({ buka, setBuka, tutupNavigasi, nama, email, foto, label }, ref) {
+  return (
+    <div ref={ref} className="relative ml-1 shrink-0">
+      <button
+        type="button"
+        onClick={() => {
+          setBuka((v) => !v);
+          tutupNavigasi();
+        }}
+        aria-label={buka ? 'Tutup menu akun' : 'Buka menu akun'}
+        aria-expanded={buka}
+        aria-haspopup="menu"
+        className="bisa-ditekan active:bisa-ditekan-aktif flex h-11 w-11 items-center justify-center rounded-full"
+      >
+        {/* Lingkarannya 36px, tombolnya 44px: yang terlihat mengikuti mockup,
+            yang bisa ditekan mengikuti jempol. */}
+        <span
+          className={`flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-slate-200 ring-2 transition-colors duration-200 ${
+            buka ? 'ring-merek-magenta' : 'ring-black/10'
+          }`}
+        >
+          {foto ? (
+            <img
+              src={foto}
+              alt=""
+              referrerPolicy="no-referrer"
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <span aria-hidden className="text-xs font-black text-slate-500">
+              {inisial(nama)}
+            </span>
+          )}
+        </span>
+      </button>
+
+      {buka && (
+        <div
+          role="menu"
+          aria-label="Menu akun"
+          className="tumbuh-dari-atas absolute right-0 top-[calc(100%+0.5rem)] z-50 w-60 overflow-hidden rounded-2xl bg-white shadow-[0_18px_44px_-18px_rgba(15,42,70,0.55)] ring-1 ring-slate-200"
+        >
+          {/* Ekor kecil yang menyambung ke fotonya. Tanpa dia, kotak ini
+              terlihat mengambang sendiri dan hubungannya dengan foto di
+              atasnya hilang. */}
+          <span
+            aria-hidden
+            className="absolute -top-1.5 right-4 h-3 w-3 rotate-45 bg-white ring-1 ring-slate-200"
+          />
+
+          <div className="relative border-b border-slate-100 bg-white px-4 py-3">
+            <p className="truncate text-sm font-black">{nama ?? 'Peserta'}</p>
+            {email && (
+              <p className="truncate text-xs text-slate-500">{email}</p>
+            )}
+            <p className="mt-0.5 truncate text-[11px] font-bold uppercase tracking-wider text-merek-magenta">
+              {label}
+            </p>
+          </div>
+
+          <div className="relative p-1.5">
+            <Link
+              to="/profil"
+              role="menuitem"
+              onClick={() => setBuka(false)}
+              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-800 hover:bg-slate-50"
+            >
+              <IkonOrang />
+              Profil Saya
+            </Link>
+
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setBuka(false);
+                lupakanIzin();
+                void keluar();
+              }}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-bold text-bahaya-600 hover:bg-bahaya-50"
+            >
+              <IkonKeluar />
+              Keluar
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+});
+
+function IkonOrang() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5 shrink-0 text-slate-400"
+      fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
+      <circle cx="12" cy="8" r="3.6" />
+      <path d="M4.8 20a7.2 7.2 0 0 1 14.4 0" />
+    </svg>
+  );
+}
+
+function IkonKeluar() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5 shrink-0 text-bahaya-600/70"
+      fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
+      <path d="M10 17 5 12l5-5" />
+      <path d="M5 12h11" />
+    </svg>
   );
 }
 
